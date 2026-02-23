@@ -11,15 +11,22 @@ const IssueCard = ({ issue, onClick, onStatusChange }) => {
   };
 
   const priorityConfig = {
-    lowest: { color: '#9ca3af', label: 'Lowest' },
-    low: { color: '#6b7280', label: 'Low' },
-    medium: { color: '#f59e0b', label: 'Medium' },
-    high: { color: '#f97316', label: 'High' },
-    highest: { color: '#ef4444', label: 'Highest' }
+    P1: { color: '#ef4444', label: 'P1' },
+    P2: { color: '#f97316', label: 'P2' },
+    P3: { color: '#f59e0b', label: 'P3' },
+    P4: { color: '#6b7280', label: 'P4' },
+    P5: { color: '#9ca3af', label: 'P5' },
+    // Backward compatibility with old values
+    lowest: { color: '#9ca3af', label: 'P5' },
+    low: { color: '#6b7280', label: 'P4' },
+    medium: { color: '#f59e0b', label: 'P3' },
+    high: { color: '#f97316', label: 'P2' },
+    highest: { color: '#ef4444', label: 'P1' }
   };
 
   const status = statusConfig[issue.status] || statusConfig.to_do;
-  const priority = priorityConfig[issue.priority] || priorityConfig.medium;
+  const internalPriority = priorityConfig[issue.internal_priority || issue.priority] || priorityConfig.P3;
+  const clientPriority = issue.client_priority ? priorityConfig[issue.client_priority] : null;
 
   return (
     <div className="issue-card" onClick={onClick}>
@@ -46,12 +53,24 @@ const IssueCard = ({ issue, onClick, onStatusChange }) => {
       )}
       <div className="issue-footer">
         <div className="issue-meta">
-          <span 
-            className="priority-badge"
-            style={{ color: priority.color }}
-          >
-            {priority.label}
-          </span>
+          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+            <span 
+              className="priority-badge"
+              style={{ color: internalPriority.color }}
+              title="Internal Priority"
+            >
+              Internal: {internalPriority.label}
+            </span>
+            {clientPriority && (
+              <span 
+                className="priority-badge"
+                style={{ color: clientPriority.color, border: `1px solid ${clientPriority.color}` }}
+                title="Client Priority"
+              >
+                Client: {clientPriority.label}
+              </span>
+            )}
+          </div>
           {issue.assignee_id && (
             <div className="assignee-avatar">
               {issue.assignee?.email?.charAt(0).toUpperCase() || '?'}

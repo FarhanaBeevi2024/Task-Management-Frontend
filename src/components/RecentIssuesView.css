@@ -1,0 +1,93 @@
+.recent-issues-view-header {
+  padding: 2rem;
+  background: white;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.recent-issues-view-header h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0 0 0.5rem 0;
+}
+
+.recent-issues-view-header p {
+  color: #6b7280;
+  margin: 0;
+}
+
+.recent-issues-view-content {
+  margin-top: 0.5rem;
+  padding: 0 2rem 2rem;
+}
+
+.recent-issues-view-content .empty-state {
+  text-align: center;
+  padding: 4rem 2rem;
+  color: #6b7280;
+}
+
+.recent-issues-view-content .empty-icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+.recent-issues-view-content .empty-state h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0 0 0.5rem 0;
+}
+
+.recent-issues-view-content .empty-state p {
+  font-size: 1rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+.recent-issues-list {
+  background: #fff;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  overflow: hidden;
+}
+
+.recent-issue-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: none;
+  border-bottom: 1px solid #f3f4f6;
+  background: none;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+  transition: background 0.2s;
+}
+
+.recent-issue-row:last-child {
+  border-bottom: none;
+}
+
+.recent-issue-row:hover {
+  background: #f3f4f6;
+}
+
+.recent-issue-key {
+  font-weight: 600;
+  color: #6b7280;
+  min-width: 5rem;
+}
+
+.recent-issue-summary {
+  flex: 1;
+  color: #111827;
+}
+
+.recent-issue-project {
+  font-size: 0.875rem;
+  color: #9ca3af;
+}

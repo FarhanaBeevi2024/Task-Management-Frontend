@@ -1,6 +1,7 @@
 .jira-board {
   background: #f8fafc;
   min-height: 100%;
+  overflow-x: auto;
 }
 
 .board-header {
