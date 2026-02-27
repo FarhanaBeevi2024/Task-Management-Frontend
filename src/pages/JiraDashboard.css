@@ -13,6 +13,13 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  overflow: hidden; /* inner views manage their own scroll */
+}
+
+.dashboard-main-content {
+  flex: 1;
+  padding: 1.5rem;
+  overflow: auto;
 }
 
 .loading-screen {

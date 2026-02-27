@@ -1,18 +1,22 @@
 import React from 'react';
+import { canManageUsers } from '../config/accessConfig.js';
 import './DashboardNavBar.css';
 
 const VIEWS = {
   PROJECTS: 'projects',
-  RECENT_ISSUES: 'recent-issues',
-  PROJECT_UPDATES: 'project-updates',
+  OVERVIEW: 'overview',
+  BOARD: 'board',
+  WORK_ITEMS: 'work-items',
+  USER_MANAGEMENT: 'user-management',
 };
 
 /**
- * Static sidebar navigation. Same menu on every screen.
- * Projects and Recent issues navigate to those views; active item is highlighted.
+ * Sidebar navigation. When a project is selected: current project (click = back to list), Overview, Board.
+ * When no project: Projects, Recent issues, etc.
  */
-function DashboardNavBar({ currentUser, mainView, onViewChange, onLogout, userRole }) {
+function DashboardNavBar({ currentUser, mainView, onViewChange, onLogout, userRole, selectedProject, onBackToProjects }) {
   const isClient = userRole === 'client' || userRole === 'representative';
+  const showUserManagement = canManageUsers(userRole);
   const displayName = currentUser?.email?.split('@')[0] || 'User';
   const initial = currentUser?.email?.charAt(0).toUpperCase() || 'U';
 
@@ -30,72 +34,75 @@ function DashboardNavBar({ currentUser, mainView, onViewChange, onLogout, userRo
         </div>
       </div>
 
+      {selectedProject && (
+        <button
+          type="button"
+          className="sidebar-current-project"
+          onClick={onBackToProjects}
+          title="Back to projects list"
+        >
+          <div className="current-project-info">
+            <span className="current-project-key">{selectedProject.key}</span>
+            <span className="current-project-name">{selectedProject.name}</span>
+          </div>
+        </button>
+      )}
+
       <nav className="sidebar-menu">
         <div className="menu-section">
-          <button
-            type="button"
-            className={`menu-item ${mainView === VIEWS.PROJECTS ? 'active' : ''}`}
-            onClick={() => handleNavClick(VIEWS.PROJECTS)}
-          >
-            <span className="menu-icon">📊</span>
-            <span>Projects</span>
-          </button>
-          <button
-            type="button"
-            className={`menu-item ${mainView === VIEWS.RECENT_ISSUES ? 'active' : ''}`}
-            onClick={() => handleNavClick(VIEWS.RECENT_ISSUES)}
-          >
-            <span className="menu-icon">📋</span>
-            <span>Recent issues</span>
-          </button>
-          {isClient && (
+          {!selectedProject && (
+            <>
+              <button
+                type="button"
+                className={`menu-item ${mainView === VIEWS.PROJECTS ? 'active' : ''}`}
+                onClick={() => handleNavClick(VIEWS.PROJECTS)}
+              >
+                <span className="menu-icon">📊</span>
+                <span>Projects</span>
+              </button>
+            </>
+          )}
+          {selectedProject && (
+            <>
+              <button
+                type="button"
+                className={`menu-item ${mainView === VIEWS.OVERVIEW ? 'active' : ''}`}
+                onClick={() => handleNavClick(VIEWS.OVERVIEW)}
+              >
+                <span className="menu-icon">📄</span>
+                <span>Overview</span>
+              </button>
+              <button
+                type="button"
+                className={`menu-item ${mainView === VIEWS.BOARD ? 'active' : ''}`}
+                onClick={() => handleNavClick(VIEWS.BOARD)}
+              >
+                <span className="menu-icon">📋</span>
+                <span>Board</span>
+              </button>
+              <button
+                type="button"
+                className={`menu-item ${mainView === VIEWS.WORK_ITEMS ? 'active' : ''}`}
+                onClick={() => handleNavClick(VIEWS.WORK_ITEMS)}
+              >
+                <span className="menu-icon">🧩</span>
+                <span>Work items</span>
+              </button>
+            </>
+          )}
+        </div>
+
+        <div className="menu-section">
+          {showUserManagement && (
             <button
               type="button"
-              className={`menu-item ${mainView === VIEWS.PROJECT_UPDATES ? 'active' : ''}`}
-              onClick={() => handleNavClick(VIEWS.PROJECT_UPDATES)}
+              className={`menu-item ${mainView === VIEWS.USER_MANAGEMENT ? 'active' : ''}`}
+              onClick={() => handleNavClick(VIEWS.USER_MANAGEMENT)}
             >
-              <span className="menu-icon">📢</span>
-              <span>Project updates</span>
+              <span className="menu-icon">⚙️</span>
+              <span>Users</span>
             </button>
           )}
-          <div className="menu-item">
-            <span className="menu-icon">📥</span>
-            <span>Inbox</span>
-          </div>
-          <div className="menu-item">
-            <span className="menu-icon">📅</span>
-            <span>Calendar</span>
-          </div>
-        </div>
-
-        <div className="menu-section">
-          <div className="section-title">
-            <span>Team spaces</span>
-            <span className="add-icon">+</span>
-          </div>
-          <div className="menu-item">
-            <span className="menu-icon">✓</span>
-            <span>Tasks</span>
-          </div>
-          <div className="menu-item">
-            <span className="menu-icon">📄</span>
-            <span>Docs</span>
-          </div>
-          <div className="menu-item">
-            <span className="menu-icon">💬</span>
-            <span>Meeting</span>
-          </div>
-        </div>
-
-        <div className="menu-section">
-          <div className="menu-item">
-            <span className="menu-icon">⚙️</span>
-            <span>Settings</span>
-          </div>
-          <div className="menu-item">
-            <span className="menu-icon">❓</span>
-            <span>Support</span>
-          </div>
         </div>
       </nav>
 

@@ -1,7 +1,7 @@
 import React from 'react';
 import './IssueCard.css';
 
-const IssueCard = ({ issue, onClick, onStatusChange }) => {
+const IssueCard = ({ issue, onClick, onStatusChange, users = [], onAssign, onDragStart }) => {
   const issueType = issue.issue_type || {};
   const statusConfig = {
     to_do: { color: '#6b7280', bg: '#f3f4f6', label: 'To Do' },
@@ -28,8 +28,24 @@ const IssueCard = ({ issue, onClick, onStatusChange }) => {
   const internalPriority = priorityConfig[issue.internal_priority || issue.priority] || priorityConfig.P3;
   const clientPriority = issue.client_priority ? priorityConfig[issue.client_priority] : null;
 
+  const assigneeValue = issue.assignee_id || issue.assignee?.id || '';
+  const currentUser =
+    users.find((u) => u.user_id === assigneeValue) || null;
+  const assigneeEmail = currentUser?.email || issue.assignee?.email || '';
+  const assigneeInitial = assigneeEmail
+    ? assigneeEmail.charAt(0).toUpperCase()
+    : '?';
+
   return (
-    <div className="issue-card" onClick={onClick}>
+    <div
+      className="issue-card"
+      onClick={onClick}
+      draggable
+      onDragStart={(e) => {
+        e.stopPropagation();
+        if (onDragStart) onDragStart(issue.id);
+      }}
+    >
       <div className="issue-header">
         <div className="issue-key-type">
           <span className="issue-key">{issue.issue_key}</span>
@@ -53,53 +69,28 @@ const IssueCard = ({ issue, onClick, onStatusChange }) => {
       )}
       <div className="issue-footer">
         <div className="issue-meta">
-          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
-            <span 
-              className="priority-badge"
-              style={{ color: internalPriority.color }}
-              title="Internal Priority"
-            >
-              Internal: {internalPriority.label}
-            </span>
-            {clientPriority && (
-              <span 
-                className="priority-badge"
-                style={{ color: clientPriority.color, border: `1px solid ${clientPriority.color}` }}
-                title="Client Priority"
-              >
-                Client: {clientPriority.label}
-              </span>
-            )}
+          <div className="assignee-avatar">
+            {assigneeInitial}
           </div>
-          {issue.assignee_id && (
-            <div className="assignee-avatar">
-              {issue.assignee?.email?.charAt(0).toUpperCase() || '?'}
-            </div>
-          )}
         </div>
-        {onStatusChange ? (
-          <select
-            value={issue.status}
-            onChange={(e) => {
-              e.stopPropagation();
-              onStatusChange(issue.id, e.target.value);
-            }}
-            className="status-select"
-            onClick={(e) => e.stopPropagation()}
-            style={{ borderColor: status.color }}
-          >
-            <option value="to_do">To Do</option>
-            <option value="in_progress">In Progress</option>
-            <option value="in_review">In Review</option>
-            <option value="done">Completed</option>
-          </select>
-        ) : (
-          <span 
-            className="status-badge"
-            style={{ backgroundColor: status.bg, color: status.color }}
-          >
-            {status.label}
-          </span>
+        {onAssign && (
+          <div className="assignee-select-wrapper" onClick={(e) => e.stopPropagation()}>
+            <select
+              value={assigneeValue}
+              onChange={(e) => {
+                const value = e.target.value || null;
+                onAssign(issue.id, value);
+              }}
+              className="assignee-select"
+            >
+              <option value="">Unassigned</option>
+              {users.map((u) => (
+                <option key={u.user_id} value={u.user_id}>
+                  {u.email}
+                </option>
+              ))}
+            </select>
+          </div>
         )}
       </div>
     </div>

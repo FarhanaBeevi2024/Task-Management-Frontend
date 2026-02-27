@@ -2,11 +2,14 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import DashboardNavBar, { DASHBOARD_VIEWS } from '../components/DashboardNavBar.jsx';
 import ProjectsView from '../components/ProjectsView.jsx';
-import RecentIssuesView from '../components/RecentIssuesView.jsx';
 import ProjectForm from '../components/ProjectForm.jsx';
 import TaskBoardView from '../components/TaskBoardView.jsx';
+import ProjectOverview from '../components/ProjectOverview.jsx';
 import IssueForm from '../components/IssueForm.jsx';
 import IssueDetail from '../components/IssueDetail.jsx';
+import UserManagement from '../components/UserManagement.jsx';
+import WorkItemsView from '../components/WorkItemsView.jsx';
+import { canUserCreateProject } from '../config/accessConfig.js';
 import './JiraDashboard.css';
 
 /**
@@ -23,10 +26,8 @@ function JiraDashboard({ session, onLogout }) {
   const [currentUser, setCurrentUser] = useState(null);
   const [userRole, setUserRole] = useState('user');
   const [loading, setLoading] = useState(true);
-  const [activeView, setActiveView] = useState('board');
   const [refreshKey, setRefreshKey] = useState(0);
   const [allIssues, setAllIssues] = useState([]);
-  const [recentIssues, setRecentIssues] = useState([]);
   const [mainView, setMainView] = useState(DASHBOARD_VIEWS.PROJECTS);
   const [parentIssueForSubtask, setParentIssueForSubtask] = useState(null);
 
@@ -34,12 +35,6 @@ function JiraDashboard({ session, onLogout }) {
     fetchUserInfo();
     fetchProjects();
   }, [session]);
-
-  useEffect(() => {
-    if (session && mainView === DASHBOARD_VIEWS.RECENT_ISSUES) {
-      fetchRecentIssues();
-    }
-  }, [session, mainView, refreshKey]);
 
   useEffect(() => {
     if (selectedProject) {
@@ -70,18 +65,6 @@ function JiraDashboard({ session, onLogout }) {
       console.error('Error fetching projects:', error);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const fetchRecentIssues = async () => {
-    try {
-      const response = await axios.get('/api/jira/issues', {
-        headers: { Authorization: `Bearer ${session.access_token}` },
-      });
-      setRecentIssues(response.data ?? []);
-    } catch (error) {
-      console.error('Error fetching recent issues:', error);
-      setRecentIssues([]);
     }
   };
 
@@ -147,11 +130,22 @@ function JiraDashboard({ session, onLogout }) {
     return <div className="loading-screen">Loading...</div>;
   }
 
-  const isBoardView = Boolean(selectedProject);
+  const hasProjectSelected = Boolean(selectedProject);
+  const allowCreateProject = canUserCreateProject(userRole);
 
   const handleNavViewChange = (view) => {
     setMainView(view);
-    if (isBoardView) setSelectedProject(null);
+    if (view === DASHBOARD_VIEWS.PROJECTS) setSelectedProject(null);
+  };
+
+  const handleBackToProjects = () => {
+    setSelectedProject(null);
+    setMainView(DASHBOARD_VIEWS.PROJECTS);
+  };
+
+  const handleSelectProject = (project) => {
+    setSelectedProject(project);
+    setMainView(DASHBOARD_VIEWS.OVERVIEW);
   };
 
   return (
@@ -162,16 +156,33 @@ function JiraDashboard({ session, onLogout }) {
         onViewChange={handleNavViewChange}
         onLogout={onLogout}
         userRole={userRole}
+        selectedProject={selectedProject}
+        onBackToProjects={handleBackToProjects}
       />
 
       <main className="dashboard-main">
-        {isBoardView ? (
+        {mainView === DASHBOARD_VIEWS.USER_MANAGEMENT ? (
+          <UserManagement session={session} />
+        ) : hasProjectSelected && mainView === DASHBOARD_VIEWS.WORK_ITEMS ? (
+          <WorkItemsView
+            session={session}
+            currentUser={currentUser}
+            onIssueClick={handleRecentIssueClick}
+            project={selectedProject}
+          />
+        ) : hasProjectSelected && mainView === DASHBOARD_VIEWS.OVERVIEW ? (
+          <div className="dashboard-main-content">
+            <ProjectOverview
+              project={selectedProject}
+              session={session}
+              userRole={userRole}
+            />
+          </div>
+        ) : hasProjectSelected && mainView === DASHBOARD_VIEWS.BOARD ? (
           <TaskBoardView
             project={selectedProject}
             session={session}
-            activeView={activeView}
-            onViewChange={setActiveView}
-            onBackToProjects={() => setSelectedProject(null)}
+            onBackToProjects={handleBackToProjects}
             onIssueClick={(issue) => {
               setSelectedIssue(issue);
               setShowIssueDetail(true);
@@ -182,15 +193,10 @@ function JiraDashboard({ session, onLogout }) {
             }}
             boardRefreshKey={refreshKey}
           />
-        ) : mainView === DASHBOARD_VIEWS.RECENT_ISSUES ? (
-          <RecentIssuesView
-            issues={recentIssues}
-            onIssueClick={handleRecentIssueClick}
-          />
         ) : mainView === DASHBOARD_VIEWS.PROJECT_UPDATES ? (
           <ProjectsView
             projects={projects}
-            onSelectProject={setSelectedProject}
+            onSelectProject={handleSelectProject}
             onCreateProjectClick={() => setShowProjectForm(true)}
             title="Project updates"
             showCreateButton={false}
@@ -198,9 +204,10 @@ function JiraDashboard({ session, onLogout }) {
         ) : (
           <ProjectsView
             projects={projects}
-            onSelectProject={setSelectedProject}
+            onSelectProject={handleSelectProject}
             onCreateProjectClick={() => setShowProjectForm(true)}
             title="Projects"
+            showCreateButton={allowCreateProject}
           />
         )}
       </main>

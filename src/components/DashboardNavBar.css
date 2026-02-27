@@ -55,6 +55,49 @@
   text-overflow: ellipsis;
 }
 
+/* Current project: separate block with its own icon */
+.sidebar-current-project {
+  display: block;
+  width: calc(100% - 1.5rem);
+  margin: 0 0.75rem 0.5rem;
+  padding: 0.75rem 1.25rem;
+  border-radius: 12px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  transition: background 0.2s, border-color 0.2s;
+}
+.sidebar-current-project:hover {
+  background: #f3f4f6;
+  border-color: #d1d5db;
+}
+
+.current-project-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.current-project-key {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.current-project-name {
+  font-size: 0.9rem;
+  color: #111827;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .sidebar-menu {
   flex: 1;
   padding: 1rem 0;

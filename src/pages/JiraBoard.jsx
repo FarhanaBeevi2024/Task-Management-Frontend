@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import * as XLSX from 'xlsx';
 import IssueCard from '../components/IssueCard.jsx';
 import './JiraBoard.css';
 
@@ -17,7 +18,11 @@ const JiraBoard = ({ project, session, onIssueClick }) => {
   const [sprints, setSprints] = useState([]);
   const [statusFilter, setStatusFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [showReport, setShowReport] = useState(false);
+  const [showExportConfirm, setShowExportConfirm] = useState(false);
+  const [users, setUsers] = useState([]);
+  const [canAssignTasks, setCanAssignTasks] = useState(false);
+  const [draggedIssueId, setDraggedIssueId] = useState(null);
+  const [toast, setToast] = useState(null);
 
   const statuses = [
     { key: 'to_do', label: 'To Do' },
@@ -26,10 +31,20 @@ const JiraBoard = ({ project, session, onIssueClick }) => {
     { key: 'done', label: 'Completed' }
   ];
 
+  const showToast = (message, type = 'info', duration = 2500) => {
+    setToast({ message, type });
+    if (duration > 0) {
+      setTimeout(() => {
+        setToast(null);
+      }, duration);
+    }
+  };
+
   useEffect(() => {
     if (project) {
       fetchIssues();
       fetchSprints();
+      fetchUsers();
     }
   }, [project, sprint]);
 
@@ -69,8 +84,27 @@ const JiraBoard = ({ project, session, onIssueClick }) => {
     }
   };
 
+  const fetchUsers = async () => {
+    try {
+      const response = await axios.get('/api/users', {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+      setUsers(response.data || []);
+      setCanAssignTasks(true);
+    } catch (error) {
+      // If not allowed (403), just skip assignment dropdown
+      if (error?.response?.status !== 403) {
+        console.error('Error fetching users for assignment:', error);
+      }
+      setCanAssignTasks(false);
+    }
+  };
+
   const handleStatusChange = async (issueId, newStatus) => {
     try {
+      showToast('Updating task status...', 'info', 1500);
       await axios.put(`/api/jira/issues/${issueId}`, 
         { status: newStatus },
         {
@@ -80,9 +114,10 @@ const JiraBoard = ({ project, session, onIssueClick }) => {
         }
       );
       fetchIssues();
+      showToast('Task status updated', 'success');
     } catch (error) {
       console.error('Error updating issue status:', error);
-      alert('Failed to update issue status');
+      showToast('Failed to update task status', 'error');
     }
   };
 
@@ -97,7 +132,62 @@ const JiraBoard = ({ project, session, onIssueClick }) => {
     return filteredIssues.filter(issue => issue.status === status);
   };
 
-  if (loading) {
+  const handleAssign = async (issueId, userId) => {
+    try {
+      showToast('Assigning task...', 'info', 1500);
+      await axios.put(
+        `/api/jira/issues/${issueId}`,
+        { assignee_id: userId },
+        {
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+          },
+        }
+      );
+      fetchIssues();
+      showToast('Task assignee updated', 'success');
+    } catch (error) {
+      console.error('Error assigning issue:', error);
+      showToast(error.response?.data?.error || 'Failed to assign issue', 'error');
+    }
+  };
+
+  const handleDragStart = (issueId) => {
+    setDraggedIssueId(issueId);
+  };
+
+  const handleDropOnColumn = async (statusKey) => {
+    if (!draggedIssueId) return;
+    await handleStatusChange(draggedIssueId, statusKey);
+    setDraggedIssueId(null);
+  };
+
+  const handleExportExcel = () => {
+    const rows = filteredIssues.map((issue) => ({
+      'Issue Key': issue.issue_key,
+      Summary: issue.summary,
+      Description: issue.description,
+      Status: STATUS_LABELS[issue.status] || issue.status,
+      'Internal Priority': issue.internal_priority || '',
+      'Client Priority': issue.client_priority || '',
+      Assignee: issue.assignee?.email || '',
+      'Planned (days)': issue.estimated_days ?? '',
+      'Actual (days)': issue.actual_days ?? '',
+      'Exposed to client': issue.exposed_to_client ? 'Yes' : 'No',
+      Created: issue.created_at ? new Date(issue.created_at).toLocaleString() : '',
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(rows);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Tasks');
+
+    const filename = `tasks_${project?.key || 'project'}.xlsx`;
+    XLSX.writeFile(workbook, filename);
+    setShowExportConfirm(false);
+  };
+
+  // Only show full-page loading state before we have any issues.
+  if (loading && issues.length === 0) {
     return <div className="board-loading">Loading board...</div>;
   }
 
@@ -126,15 +216,27 @@ const JiraBoard = ({ project, session, onIssueClick }) => {
             aria-label="Search tasks"
           />
         </div>
-        <button type="button" className="board-export-btn" onClick={() => setShowReport(true)}>
-          View Excel report
+        <button
+          type="button"
+          className="board-export-btn"
+          onClick={() => setShowExportConfirm(true)}
+        >
+          ⬆️ Export
         </button>
       </div>
       <div className="board-columns">
         {statuses.map(status => {
           const statusIssues = getIssuesByStatus(status.key);
           return (
-            <div key={status.key} className="board-column">
+            <div
+              key={status.key}
+              className="board-column"
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={(e) => {
+                e.preventDefault();
+                handleDropOnColumn(status.key);
+              }}
+            >
               <div className="column-header">
                 <h3>{status.label}</h3>
                 <span className="issue-count">{statusIssues.length}</span>
@@ -145,7 +247,9 @@ const JiraBoard = ({ project, session, onIssueClick }) => {
                     key={issue.id}
                     issue={issue}
                     onClick={() => onIssueClick && onIssueClick(issue)}
-                    onStatusChange={handleStatusChange}
+                    users={users}
+                    onAssign={canAssignTasks ? handleAssign : null}
+                    onDragStart={handleDragStart}
                   />
                 ))}
                 {statusIssues.length === 0 && (
@@ -156,22 +260,27 @@ const JiraBoard = ({ project, session, onIssueClick }) => {
           );
         })}
       </div>
-      {showReport && (
-        <div className="board-report-overlay" onClick={() => setShowReport(false)}>
+      {toast && (
+        <div className={`board-toast board-toast-${toast.type}`}>
+          {toast.message}
+        </div>
+      )}
+      {showExportConfirm && (
+        <div className="board-report-overlay" onClick={() => setShowExportConfirm(false)}>
           <div className="board-report-modal" onClick={(e) => e.stopPropagation()}>
             <div className="board-report-header">
-              <h2>Tasks Excel report</h2>
+              <h2>Confirm export</h2>
               <button
                 type="button"
                 className="board-report-close"
-                onClick={() => setShowReport(false)}
-                aria-label="Close report"
+                onClick={() => setShowExportConfirm(false)}
+                aria-label="Close export preview"
               >
                 ×
               </button>
             </div>
             <p className="board-report-subtitle">
-              Showing {filteredIssues.length} task{filteredIssues.length === 1 ? '' : 's'} for project {project?.key || ''}{' '}
+              Exporting {filteredIssues.length} task{filteredIssues.length === 1 ? '' : 's'} for project {project?.key || ''}{' '}
               {statusFilter !== 'all' && `with status ${STATUS_LABELS[statusFilter] || statusFilter}`}.
             </p>
             <div className="board-report-table-wrapper">
@@ -216,6 +325,22 @@ const JiraBoard = ({ project, session, onIssueClick }) => {
                   )}
                 </tbody>
               </table>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', padding: '0 1.5rem 1.25rem 1.5rem' }}>
+              <button
+                type="button"
+                className="cancel-btn"
+                onClick={() => setShowExportConfirm(false)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="submit-btn"
+                onClick={handleExportExcel}
+              >
+                Confirm export
+              </button>
             </div>
           </div>
         </div>

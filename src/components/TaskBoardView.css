@@ -87,7 +87,7 @@
 
 .board-container {
   flex: 1;
-  overflow-y: auto;
+  overflow: hidden; /* inner board/overview manage their own scroll */
   padding: 2rem;
 }
 
