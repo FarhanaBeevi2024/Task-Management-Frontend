@@ -1,7 +1,7 @@
 .jira-board {
   background: #f8fafc;
   min-height: 100%;
-  overflow-x: auto;
+  overflow-x: hidden;
 }
 
 .board-header {
@@ -43,6 +43,161 @@
   border-radius: 8px;
   font-weight: 600;
   font-size: 0.875rem;
+}
+
+.board-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+}
+
+.board-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.board-filter-select {
+  padding: 0.5rem 0.75rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  background: #f9fafb;
+  color: #374151;
+  min-width: 140px;
+}
+
+.board-filter-select:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+.board-search-input {
+  padding: 0.5rem 0.75rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  background: #f9fafb;
+  color: #374151;
+  min-width: 220px;
+}
+
+.board-search-input::placeholder {
+  color: #9ca3af;
+}
+
+.board-search-input:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+.board-export-btn {
+  padding: 0.5rem 1rem;
+  background: #667eea;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.board-export-btn:hover {
+  background: #5568d3;
+}
+
+.board-report-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2100;
+  padding: 2rem;
+}
+
+.board-report-modal {
+  background: white;
+  border-radius: 16px;
+  max-width: 1000px;
+  width: 100%;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.board-report-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.board-report-header h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.board-report-close {
+  border: none;
+  background: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #6b7280;
+}
+
+.board-report-close:hover {
+  color: #111827;
+}
+
+.board-report-subtitle {
+  margin: 0;
+  padding: 0 1.5rem 0.75rem 1.5rem;
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.board-report-table-wrapper {
+  padding: 0 1.5rem 1.5rem 1.5rem;
+  overflow: auto;
+}
+
+.board-report-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.board-report-table th,
+.board-report-table td {
+  border: 1px solid #e5e7eb;
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+.board-report-table th {
+  background: #f9fafb;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.board-report-table tbody tr:nth-child(even) {
+  background: #f9fafb;
 }
 
 .board-columns {

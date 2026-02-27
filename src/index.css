@@ -13,6 +13,7 @@ body {
   background-color: #f8fafc;
   color: #1f2937;
   line-height: 1.6;
+  overflow-x: hidden;
 }
 
 code {
