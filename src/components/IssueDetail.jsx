@@ -34,8 +34,10 @@ const IssueDetail = ({ issue, session, onClose, onEdit, onUpdate, onAddSubtask, 
   const [estimatedDays, setEstimatedDays] = useState('');
   const [actualDays, setActualDays] = useState('');
   const [assigneeId, setAssigneeId] = useState('');
+  const [milestoneId, setMilestoneId] = useState('');
   const [exposedToClient, setExposedToClient] = useState(false);
   const [teamMembers, setTeamMembers] = useState([]);
+  const [milestones, setMilestones] = useState([]);
 
   useEffect(() => {
     if (issue) {
@@ -52,6 +54,7 @@ const IssueDetail = ({ issue, session, onClose, onEdit, onUpdate, onAddSubtask, 
       setEstimatedDays(issue.estimated_days ?? '');
       setActualDays(issue.actual_days ?? '');
       setAssigneeId(issue.assignee_id || '');
+      setMilestoneId(issue.milestone_id || '');
       setExposedToClient(issue.exposed_to_client === true);
     }
   }, [issue]);
@@ -67,6 +70,14 @@ const IssueDetail = ({ issue, session, onClose, onEdit, onUpdate, onAddSubtask, 
       }).catch((err) => console.error('Error fetching team members:', err));
     }
   }, [canAssign, session]);
+
+  useEffect(() => {
+    if (issue?.project?.id && session) {
+      axios.get(`/api/jira/projects/${issue.project.id}/milestones`, {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      }).then((res) => setMilestones(res.data ?? [])).catch(() => setMilestones([]));
+    }
+  }, [issue?.project?.id, session]);
 
   useEffect(() => {
     if (issue?.id) fetchComments();
@@ -105,6 +116,7 @@ const IssueDetail = ({ issue, session, onClose, onEdit, onUpdate, onAddSubtask, 
           estimated_days: estimatedDays === '' ? null : parseInt(estimatedDays, 10),
           actual_days: actualDays === '' ? null : parseInt(actualDays, 10),
           assignee_id: assigneeId || null,
+          milestone_id: milestoneId || null,
           exposed_to_client: exposedToClient
         },
         {
@@ -183,6 +195,12 @@ const IssueDetail = ({ issue, session, onClose, onEdit, onUpdate, onAddSubtask, 
               placeholder="Issue summary"
             />
             <div className="detail-key">{issue?.issue_key}</div>
+            {issue?.milestone && (
+              <div className="detail-milestone-badge">
+                Milestone: <strong>{issue.milestone.version}</strong>
+                {issue.milestone.planned_date && ` (${new Date(issue.milestone.planned_date).toLocaleDateString()})`}
+              </div>
+            )}
           </div>
 
           <div className="detail-meta detail-meta-editable">
@@ -293,6 +311,27 @@ const IssueDetail = ({ issue, session, onClose, onEdit, onUpdate, onAddSubtask, 
                 placeholder="comma-separated labels"
               />
             </div>
+            {canAssign && milestones.length > 0 ? (
+              <div className="meta-item">
+                <span className="meta-label">Milestone:</span>
+                <select
+                  className="detail-select"
+                  value={milestoneId}
+                  onChange={(e) => setMilestoneId(e.target.value)}
+                  style={{ minWidth: '160px' }}
+                >
+                  <option value="">No Milestone</option>
+                  {milestones.map((m) => (
+                    <option key={m.id} value={m.id}>{m.version}</option>
+                  ))}
+                </select>
+              </div>
+            ) : issue?.milestone && !canAssign ? (
+              <div className="meta-item">
+                <span className="meta-label">Milestone:</span>
+                <span className="meta-value">{issue.milestone.version}</span>
+              </div>
+            ) : null}
             {canAssign ? (
               <div className="meta-item">
                 <span className="meta-label">Assign To:</span>

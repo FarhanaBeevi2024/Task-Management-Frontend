@@ -9,6 +9,7 @@ import IssueForm from '../components/IssueForm.jsx';
 import IssueDetail from '../components/IssueDetail.jsx';
 import UserManagement from '../components/UserManagement.jsx';
 import WorkItemsView from '../components/WorkItemsView.jsx';
+import MilestonesView from '../components/MilestonesView.jsx';
 import { canUserCreateProject } from '../config/accessConfig.js';
 import './JiraDashboard.css';
 
@@ -184,6 +185,14 @@ function JiraDashboard({ session, onLogout }) {
         ) : hasProjectSelected && mainView === DASHBOARD_VIEWS.OVERVIEW ? (
           <div className="dashboard-main-content">
             <ProjectOverview
+              project={selectedProject}
+              session={session}
+              userRole={userRole}
+            />
+          </div>
+        ) : hasProjectSelected && mainView === DASHBOARD_VIEWS.MILESTONES ? (
+          <div className="dashboard-main-content">
+            <MilestonesView
               project={selectedProject}
               session={session}
               userRole={userRole}

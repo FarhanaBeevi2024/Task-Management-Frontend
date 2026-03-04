@@ -7,6 +7,7 @@ const VIEWS = {
   OVERVIEW: 'overview',
   BOARD: 'board',
   WORK_ITEMS: 'work-items',
+  MILESTONES: 'milestones',
   USER_MANAGEMENT: 'user-management',
 };
 
@@ -91,6 +92,14 @@ function DashboardNavBar({ currentUser, mainView, onViewChange, onLogout, userRo
                   <span>Work items</span>
                 </button>
               )}
+              <button
+                type="button"
+                className={`menu-item ${mainView === VIEWS.MILESTONES ? 'active' : ''}`}
+                onClick={() => handleNavClick(VIEWS.MILESTONES)}
+              >
+                <span className="menu-icon">🏁</span>
+                <span>Milestones</span>
+              </button>
             </>
           )}
         </div>

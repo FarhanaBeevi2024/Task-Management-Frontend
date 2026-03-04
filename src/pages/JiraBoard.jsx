@@ -20,6 +20,8 @@ const JiraBoard = ({ project, session, onIssueClick, projectRole }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showExportConfirm, setShowExportConfirm] = useState(false);
   const [users, setUsers] = useState([]);
+  const [milestones, setMilestones] = useState([]);
+  const [milestoneFilter, setMilestoneFilter] = useState('');
   const [canAssignTasks, setCanAssignTasks] = useState(false);
   const [draggedIssueId, setDraggedIssueId] = useState(null);
   const [toast, setToast] = useState(null);
@@ -46,11 +48,17 @@ const JiraBoard = ({ project, session, onIssueClick, projectRole }) => {
 
   useEffect(() => {
     if (project) {
+      setMilestoneFilter('');
       fetchIssues();
       fetchSprints();
       fetchUsers();
+      fetchMilestones();
     }
   }, [project, sprint]);
+
+  useEffect(() => {
+    if (project && milestoneFilter !== undefined) fetchIssues();
+  }, [milestoneFilter]);
 
   // Client view: only IN PROGRESS and COMPLETED are valid filters
   useEffect(() => {
@@ -64,7 +72,7 @@ const JiraBoard = ({ project, session, onIssueClick, projectRole }) => {
       setLoading(true);
       const params = { project_id: project.id };
       if (sprint) params.sprint_id = sprint.id;
-      
+      if (milestoneFilter) params.milestone_id = milestoneFilter;
       const response = await axios.get('/api/jira/issues', {
         params,
         headers: {
@@ -110,6 +118,19 @@ const JiraBoard = ({ project, session, onIssueClick, projectRole }) => {
         console.error('Error fetching users for assignment:', error);
       }
       setCanAssignTasks(false);
+    }
+  };
+
+  const fetchMilestones = async () => {
+    if (!project?.id) return;
+    try {
+      const response = await axios.get(`/api/jira/projects/${project.id}/milestones`, {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+      setMilestones(response.data ?? []);
+    } catch (error) {
+      console.error('Error fetching milestones:', error);
+      setMilestones([]);
     }
   };
 
@@ -218,6 +239,19 @@ const JiraBoard = ({ project, session, onIssueClick, projectRole }) => {
             {!isClientView && <option value="in_review">In Review</option>}
             <option value="done">Completed</option>
           </select>
+          {milestones.length > 0 && (
+            <select
+              className="board-filter-select"
+              value={milestoneFilter}
+              onChange={(e) => setMilestoneFilter(e.target.value)}
+              aria-label="Filter by milestone"
+            >
+              <option value="">All milestones</option>
+              {milestones.map((m) => (
+                <option key={m.id} value={m.id}>{m.version}</option>
+              ))}
+            </select>
+          )}
           <input
             type="text"
             className="board-search-input"

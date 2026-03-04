@@ -5,6 +5,7 @@ import './IssueForm.css';
 const IssueForm = ({ project, issue, parentIssue, session, onSubmit, onCancel, userRole, issues = [] }) => {
   const [issueTypes, setIssueTypes] = useState([]);
   const [releases, setReleases] = useState([]);
+  const [milestones, setMilestones] = useState([]);
   const [summary, setSummary] = useState('');
   const [description, setDescription] = useState('');
   const [issueTypeId, setIssueTypeId] = useState('');
@@ -12,6 +13,7 @@ const IssueForm = ({ project, issue, parentIssue, session, onSubmit, onCancel, u
   const [clientPriority, setClientPriority] = useState('');
   const [assigneeId, setAssigneeId] = useState('');
   const [releaseId, setReleaseId] = useState('');
+  const [milestoneId, setMilestoneId] = useState('');
   const [parentIssueId, setParentIssueId] = useState('');
   const [storyPoints, setStoryPoints] = useState('');
   const [labels, setLabels] = useState('');
@@ -23,6 +25,7 @@ const IssueForm = ({ project, issue, parentIssue, session, onSubmit, onCancel, u
   useEffect(() => {
     fetchIssueTypes();
     fetchReleases();
+    if (project?.id) fetchMilestones();
     if (parentIssue) {
       setParentIssueId(parentIssue.id || '');
     }
@@ -39,6 +42,7 @@ const IssueForm = ({ project, issue, parentIssue, session, onSubmit, onCancel, u
       setClientPriority(oldClientPriority ? (priorityMap[oldClientPriority] || oldClientPriority) : '');
       setAssigneeId(issue.assignee_id || '');
       setReleaseId(issue.release_id || '');
+      setMilestoneId(issue.milestone_id || '');
       setParentIssueId(issue.parent_issue_id || parentIssue?.id || '');
       setStoryPoints(issue.story_points || '');
       setLabels(issue.labels?.join(', ') || '');
@@ -81,6 +85,18 @@ const IssueForm = ({ project, issue, parentIssue, session, onSubmit, onCancel, u
     }
   };
 
+  const fetchMilestones = async () => {
+    if (!project?.id) return;
+    try {
+      const response = await axios.get(`/api/jira/projects/${project.id}/milestones`, {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+      setMilestones(response.data ?? []);
+    } catch (error) {
+      console.error('Error fetching milestones:', error);
+    }
+  };
+
   const fetchTeamMembers = async () => {
     try {
       const response = await axios.get('/api/users', {
@@ -102,6 +118,7 @@ const IssueForm = ({ project, issue, parentIssue, session, onSubmit, onCancel, u
       client_priority: clientPriority || null,
       assignee_id: assigneeId || null,
       release_id: releaseId || null,
+      milestone_id: milestoneId || null,
       parent_issue_id: parentIssueId || null,
       story_points: storyPoints ? parseInt(storyPoints) : null,
       labels: labels ? labels.split(',').map(l => l.trim()).filter(l => l) : [],
@@ -228,7 +245,7 @@ const IssueForm = ({ project, issue, parentIssue, session, onSubmit, onCancel, u
             )}
             {releases.length > 0 && (
               <div className="form-group">
-                <label>Release / Milestone</label>
+                <label>Release</label>
                 <select 
                   value={releaseId} 
                   onChange={(e) => setReleaseId(e.target.value)}
@@ -238,6 +255,23 @@ const IssueForm = ({ project, issue, parentIssue, session, onSubmit, onCancel, u
                   {releases.map(release => (
                     <option key={release.id} value={release.id}>
                       {release.name} {release.version && `(${release.version})`}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+            {milestones.length > 0 && (
+              <div className="form-group">
+                <label>Milestone</label>
+                <select 
+                  value={milestoneId} 
+                  onChange={(e) => setMilestoneId(e.target.value)}
+                  disabled={!fieldsEditable}
+                >
+                  <option value="">No Milestone</option>
+                  {milestones.map(m => (
+                    <option key={m.id} value={m.id}>
+                      {m.version}{m.planned_date ? ` (${new Date(m.planned_date).toLocaleDateString()})` : ''}
                     </option>
                   ))}
                 </select>

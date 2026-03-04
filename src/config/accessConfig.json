@@ -11,7 +11,8 @@
         "autoMemberOnCreate": true,
         "canManageMembers": true,
         "canCreateIssues": true,
-        "canAssignIssuesToOthers": true
+        "canAssignIssuesToOthers": true,
+        "canManageMilestones": true
       }
     },
     "admin": {
@@ -25,7 +26,8 @@
         "autoMemberOnCreate": true,
         "canManageMembers": true,
         "canCreateIssues": true,
-        "canAssignIssuesToOthers": true
+        "canAssignIssuesToOthers": true,
+        "canManageMilestones": true
       }
     },
     "team_leader": {
@@ -53,7 +55,8 @@
         "autoMemberOnCreate": false,
         "canManageMembers": false,
         "canCreateIssues": true,
-        "canAssignIssuesToOthers": false
+        "canAssignIssuesToOthers": false,
+        "canManageMilestones": false
       }
     },
     "client": {
@@ -81,7 +84,8 @@
         "autoMemberOnCreate": false,
         "canManageMembers": false,
         "canCreateIssues": true,
-        "canAssignIssuesToOthers": false
+        "canAssignIssuesToOthers": false,
+        "canManageMilestones": false
       }
     }
   }

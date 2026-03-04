@@ -24,3 +24,8 @@ export function canManageUsers(globalRole) {
 export function canViewAllProjects(globalRole) {
   return getRoleConfig(globalRole).global?.canViewAllProjects === true;
 }
+
+/** Can this role create and edit release milestones in a project? */
+export function canManageMilestones(globalRole) {
+  return getRoleConfig(globalRole).project?.canManageMilestones === true;
+}
