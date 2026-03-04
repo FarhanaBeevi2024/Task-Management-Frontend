@@ -11,7 +11,7 @@ const STATUS_LABELS = {
   done: 'Completed'
 };
 
-const JiraBoard = ({ project, session, onIssueClick }) => {
+const JiraBoard = ({ project, session, onIssueClick, projectRole }) => {
   const [issues, setIssues] = useState([]);
   const [loading, setLoading] = useState(true);
   const [sprint, setSprint] = useState(null);
@@ -24,12 +24,16 @@ const JiraBoard = ({ project, session, onIssueClick }) => {
   const [draggedIssueId, setDraggedIssueId] = useState(null);
   const [toast, setToast] = useState(null);
 
-  const statuses = [
+  const isClientView = projectRole === 'client';
+  const allStatuses = [
     { key: 'to_do', label: 'To Do' },
     { key: 'in_progress', label: 'In Progress' },
     { key: 'in_review', label: 'In Review' },
     { key: 'done', label: 'Completed' }
   ];
+  const statuses = isClientView
+    ? allStatuses.filter((s) => s.key === 'in_progress' || s.key === 'done')
+    : allStatuses;
 
   const showToast = (message, type = 'info', duration = 2500) => {
     setToast({ message, type });
@@ -47,6 +51,13 @@ const JiraBoard = ({ project, session, onIssueClick }) => {
       fetchUsers();
     }
   }, [project, sprint]);
+
+  // Client view: only IN PROGRESS and COMPLETED are valid filters
+  useEffect(() => {
+    if (isClientView && (statusFilter === 'to_do' || statusFilter === 'in_review')) {
+      setStatusFilter('all');
+    }
+  }, [isClientView, statusFilter]);
 
   const fetchIssues = async () => {
     try {
@@ -202,9 +213,9 @@ const JiraBoard = ({ project, session, onIssueClick }) => {
             aria-label="Filter by status"
           >
             <option value="all">All statuses</option>
-            <option value="to_do">To Do</option>
+            {!isClientView && <option value="to_do">To Do</option>}
             <option value="in_progress">In Progress</option>
-            <option value="in_review">In Review</option>
+            {!isClientView && <option value="in_review">In Review</option>}
             <option value="done">Completed</option>
           </select>
           <input

@@ -14,8 +14,9 @@ const VIEWS = {
  * Sidebar navigation. When a project is selected: current project (click = back to list), Overview, Board.
  * When no project: Projects, Recent issues, etc.
  */
-function DashboardNavBar({ currentUser, mainView, onViewChange, onLogout, userRole, selectedProject, onBackToProjects }) {
+function DashboardNavBar({ currentUser, mainView, onViewChange, onLogout, userRole, selectedProject, onBackToProjects, projectRole }) {
   const isClient = userRole === 'client' || userRole === 'representative';
+  const isProjectRoleClient = projectRole === 'client';
   const showUserManagement = canManageUsers(userRole);
   const displayName = currentUser?.email?.split('@')[0] || 'User';
   const initial = currentUser?.email?.charAt(0).toUpperCase() || 'U';
@@ -80,14 +81,16 @@ function DashboardNavBar({ currentUser, mainView, onViewChange, onLogout, userRo
                 <span className="menu-icon">📋</span>
                 <span>Board</span>
               </button>
-              <button
-                type="button"
-                className={`menu-item ${mainView === VIEWS.WORK_ITEMS ? 'active' : ''}`}
-                onClick={() => handleNavClick(VIEWS.WORK_ITEMS)}
-              >
-                <span className="menu-icon">🧩</span>
-                <span>Work items</span>
-              </button>
+              {!isProjectRoleClient && (
+                <button
+                  type="button"
+                  className={`menu-item ${mainView === VIEWS.WORK_ITEMS ? 'active' : ''}`}
+                  onClick={() => handleNavClick(VIEWS.WORK_ITEMS)}
+                >
+                  <span className="menu-icon">🧩</span>
+                  <span>Work items</span>
+                </button>
+              )}
             </>
           )}
         </div>

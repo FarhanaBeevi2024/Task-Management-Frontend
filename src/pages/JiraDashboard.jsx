@@ -42,6 +42,16 @@ function JiraDashboard({ session, onLogout }) {
     }
   }, [selectedProject, refreshKey]);
 
+  // Clients (project role) must not see Work items: redirect to Board if they land on it
+  useEffect(() => {
+    if (
+      selectedProject?.current_user_project_role === 'client' &&
+      mainView === DASHBOARD_VIEWS.WORK_ITEMS
+    ) {
+      setMainView(DASHBOARD_VIEWS.BOARD);
+    }
+  }, [selectedProject?.current_user_project_role, mainView]);
+
   const fetchUserInfo = async () => {
     try {
       const response = await axios.get('/api/user', {
@@ -158,6 +168,7 @@ function JiraDashboard({ session, onLogout }) {
         userRole={userRole}
         selectedProject={selectedProject}
         onBackToProjects={handleBackToProjects}
+        projectRole={selectedProject?.current_user_project_role ?? null}
       />
 
       <main className="dashboard-main">
