@@ -447,6 +447,53 @@
   color: #6b7280;
 }
 
+.activity-log-section {
+  margin-top: 0.5rem;
+}
+
+.activity-log-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0 0 1rem 0;
+}
+
+.activity-log-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.activity-log-item {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.activity-log-item .activity-avatar {
+  flex-shrink: 0;
+}
+
+.activity-log-item .activity-content {
+  min-width: 0;
+}
+
+.activity-log-date {
+  font-size: 0.8rem;
+  color: #6b7280;
+  font-weight: 400;
+}
+
+.activity-log-loading,
+.activity-log-empty {
+  color: #6b7280;
+  font-size: 0.9rem;
+  margin: 0.5rem 0;
+}
+
 .comments-section h4 {
   font-size: 1rem;
   font-weight: 600;

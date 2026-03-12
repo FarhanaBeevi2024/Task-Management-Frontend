@@ -22,6 +22,9 @@ const IssueDetail = ({ issue, session, onClose, onEdit, onUpdate, onAddSubtask, 
   const [newComment, setNewComment] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [activityLogs, setActivityLogs] = useState([]);
+  const [loadingActivity, setLoadingActivity] = useState(false);
+  const [activeTab, setActiveTab] = useState('activity');
 
   const [summary, setSummary] = useState('');
   const [description, setDescription] = useState('');
@@ -83,6 +86,26 @@ const IssueDetail = ({ issue, session, onClose, onEdit, onUpdate, onAddSubtask, 
     if (issue?.id) fetchComments();
   }, [issue?.id]);
 
+  useEffect(() => {
+    if (issue?.id && session) fetchActivityLogs();
+  }, [issue?.id, session]);
+
+  const fetchActivityLogs = async () => {
+    if (!issue?.id || !session) return;
+    try {
+      setLoadingActivity(true);
+      const response = await axios.get(`/api/jira/issues/${issue.id}/activity-logs`, {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+      setActivityLogs(Array.isArray(response.data) ? response.data : []);
+    } catch (err) {
+      console.error('Error fetching activity logs:', err);
+      setActivityLogs([]);
+    } finally {
+      setLoadingActivity(false);
+    }
+  };
+
   const fetchComments = async () => {
     try {
       setLoading(true);
@@ -126,12 +149,57 @@ const IssueDetail = ({ issue, session, onClose, onEdit, onUpdate, onAddSubtask, 
         }
       );
       if (onUpdate) onUpdate(response.data);
+      fetchActivityLogs();
     } catch (error) {
       console.error('Error updating issue:', error);
       alert(error.response?.data?.error || 'Failed to update issue');
     } finally {
       setSaving(false);
     }
+  };
+
+  const formatActivityMessage = (log) => {
+    const name = log.performed_by_email ? log.performed_by_email.split('@')[0] : 'Someone';
+    const cap = (s) => (s && s.length) ? (s.charAt(0).toUpperCase() + s.slice(1).replace(/_/g, ' ')) : '—';
+    const fmt = (v) => (v == null || v === '') ? '—' : String(v);
+    switch (log.action_type) {
+      case 'CREATE':
+        return `${name} created this issue`;
+      case 'STATUS_CHANGE':
+        return `${name} changed status from '${cap(log.old_value)}' to '${cap(log.new_value)}'`;
+      case 'PRIORITY_CHANGE':
+        return `${name} changed ${(log.field_name === 'client_priority' ? 'client priority' : 'priority')} from '${fmt(log.old_value)}' to '${fmt(log.new_value)}'`;
+      case 'ASSIGNMENT_CHANGE':
+        return `${name} changed assignee`;
+      case 'DUE_DATE_CHANGE':
+        return `${name} changed due date from '${fmt(log.old_value)}' to '${fmt(log.new_value)}'`;
+      case 'MILESTONE_CHANGE':
+        return `${name} changed milestone`;
+      case 'SUMMARY_CHANGE':
+        return `${name} updated summary`;
+      case 'DESCRIPTION_CHANGE':
+        return `${name} updated description`;
+      case 'COMMENT_ADDED':
+        return `${name} added a comment`;
+      case 'DELETE':
+        return `${name} deleted this issue`;
+      default:
+        return `${name} updated ${log.field_name || 'field'} from '${fmt(log.old_value)}' to '${fmt(log.new_value)}'`;
+    }
+  };
+
+  const formatActivityDate = (performedAt) => {
+    if (!performedAt) return '';
+    const d = new Date(performedAt);
+    const day = d.getDate().toString().padStart(2, '0');
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const month = months[d.getMonth()];
+    const year = d.getFullYear();
+    let hours = d.getHours();
+    const mins = d.getMinutes().toString().padStart(2, '0');
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12 || 12;
+    return `${day} ${month} ${year}, ${hours}:${mins} ${ampm}`;
   };
 
   const handleAddComment = async (e) => {
@@ -148,6 +216,7 @@ const IssueDetail = ({ issue, session, onClose, onEdit, onUpdate, onAddSubtask, 
       });
       setNewComment('');
       fetchComments();
+      fetchActivityLogs();
     } catch (error) {
       console.error('Error adding comment:', error);
       alert('Failed to add comment');
@@ -404,62 +473,72 @@ const IssueDetail = ({ issue, session, onClose, onEdit, onUpdate, onAddSubtask, 
           )}
 
           <div className="detail-tabs">
-            <button className="tab-btn active">Activity</button>
-            <button className="tab-btn">My Work</button>
-            <button className="tab-btn">Assigned</button>
-            <button className="tab-btn">Comments</button>
+            <button className={`tab-btn ${activeTab === 'activity' ? 'active' : ''}`} onClick={() => setActiveTab('activity')}>Activity</button>
+            <button className={`tab-btn ${activeTab === 'comments' ? 'active' : ''}`} onClick={() => setActiveTab('comments')}>Comments</button>
           </div>
 
           <div className="detail-activity">
-            <div className="activity-section">
-              <div className="activity-date">Today</div>
-              <div className="activity-item">
-                <div className="activity-avatar">
-                  {issue.reporter?.email?.charAt(0).toUpperCase() || 'U'}
-                </div>
-                <div className="activity-content">
-                  <div className="activity-text">
-                    <strong>{issue.reporter?.email?.split('@')[0] || 'User'}</strong> created {issue.issue_key}
-                  </div>
-                  <div className="activity-time">
-                    {new Date(issue.created_at).toLocaleTimeString()}
-                  </div>
-                </div>
+            {activeTab === 'activity' && (
+              <div className="activity-section activity-log-section">
+                <h4 className="activity-log-title">History</h4>
+                {loadingActivity ? (
+                  <p className="activity-log-loading">Loading activity...</p>
+                ) : activityLogs.length === 0 ? (
+                  <p className="activity-log-empty">No activity recorded yet.</p>
+                ) : (
+                  <ul className="activity-log-list">
+                    {activityLogs.map((log) => (
+                      <li key={log.id} className="activity-log-item">
+                        <div className="activity-avatar">
+                          {log.performed_by_email?.charAt(0).toUpperCase() || '?'}
+                        </div>
+                        <div className="activity-content">
+                          <div className="activity-text">
+                            {formatActivityMessage(log)}
+                            <span className="activity-log-date"> – {formatActivityDate(log.performed_at)}</span>
+                          </div>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
-            </div>
+            )}
 
-            <div className="comments-section">
-              <h4>Comments ({comments.length})</h4>
-              {comments.map(comment => (
-                <div key={comment.id} className="comment-item">
-                  <div className="comment-avatar">
-                    {comment.author?.email?.charAt(0).toUpperCase() || 'U'}
-                  </div>
-                  <div className="comment-content">
-                    <div className="comment-header">
-                      <strong>{comment.author?.email?.split('@')[0] || 'User'}</strong>
-                      <span className="comment-time">
-                        {new Date(comment.created_at).toLocaleString()}
-                      </span>
+            {activeTab === 'comments' && (
+              <div className="comments-section">
+                <h4>Comments ({comments.length})</h4>
+                {comments.map(comment => (
+                  <div key={comment.id} className="comment-item">
+                    <div className="comment-avatar">
+                      {comment.author?.email?.charAt(0).toUpperCase() || 'U'}
                     </div>
-                    <div className="comment-body">{comment.body}</div>
+                    <div className="comment-content">
+                      <div className="comment-header">
+                        <strong>{comment.author?.email?.split('@')[0] || 'User'}</strong>
+                        <span className="comment-time">
+                          {new Date(comment.created_at).toLocaleString()}
+                        </span>
+                      </div>
+                      <div className="comment-body">{comment.body}</div>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
 
-              <form onSubmit={handleAddComment} className="comment-form">
-                <textarea
-                  value={newComment}
-                  onChange={(e) => setNewComment(e.target.value)}
-                  placeholder="Add a comment..."
-                  rows="3"
-                  className="comment-input"
-                />
-                <button type="submit" className="comment-submit-btn">
-                  Add Comment
-                </button>
-              </form>
-            </div>
+                <form onSubmit={handleAddComment} className="comment-form">
+                  <textarea
+                    value={newComment}
+                    onChange={(e) => setNewComment(e.target.value)}
+                    placeholder="Add a comment..."
+                    rows="3"
+                    className="comment-input"
+                  />
+                  <button type="submit" className="comment-submit-btn">
+                    Add Comment
+                  </button>
+                </form>
+              </div>
+            )}
           </div>
         </div>
       </div>
