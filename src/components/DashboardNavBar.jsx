@@ -8,6 +8,7 @@ const VIEWS = {
   BOARD: 'board',
   WORK_ITEMS: 'work-items',
   MILESTONES: 'milestones',
+  NOTIFICATIONS: 'notifications',
   USER_MANAGEMENT: 'user-management',
 };
 
@@ -15,7 +16,7 @@ const VIEWS = {
  * Sidebar navigation. When a project is selected: current project (click = back to list), Overview, Board.
  * When no project: Projects, Recent issues, etc.
  */
-function DashboardNavBar({ currentUser, mainView, onViewChange, onLogout, userRole, selectedProject, onBackToProjects, projectRole }) {
+function DashboardNavBar({ currentUser, mainView, onViewChange, onLogout, userRole, selectedProject, onBackToProjects, projectRole, notificationsCount = 0 }) {
   const isClient = userRole === 'client' || userRole === 'representative';
   const isProjectRoleClient = projectRole === 'client';
   const showUserManagement = canManageUsers(userRole);
@@ -105,6 +106,20 @@ function DashboardNavBar({ currentUser, mainView, onViewChange, onLogout, userRo
         </div>
 
         <div className="menu-section">
+          <button
+            type="button"
+            className={`menu-item ${mainView === VIEWS.NOTIFICATIONS ? 'active' : ''}`}
+            onClick={() => handleNavClick(VIEWS.NOTIFICATIONS)}
+          >
+            <span className="menu-icon">🔔</span>
+            <span className="menu-label-with-badge">
+              <span>Notifications</span>
+              {notificationsCount > 0 && (
+                <span className="menu-badge">{notificationsCount}</span>
+              )}
+            </span>
+          </button>
+
           {showUserManagement && (
             <button
               type="button"

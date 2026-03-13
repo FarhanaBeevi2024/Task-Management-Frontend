@@ -31,6 +31,11 @@ function JiraDashboard({ session, onLogout }) {
   const [allIssues, setAllIssues] = useState([]);
   const [mainView, setMainView] = useState(DASHBOARD_VIEWS.PROJECTS);
   const [parentIssueForSubtask, setParentIssueForSubtask] = useState(null);
+  const [notifications, setNotifications] = useState([]); // unread
+  const [loadingNotifications, setLoadingNotifications] = useState(false);
+  const [allNotifications, setAllNotifications] = useState([]); // history
+  const [loadingAllNotifications, setLoadingAllNotifications] = useState(false);
+  const [showNotificationsModal, setShowNotificationsModal] = useState(false);
 
   useEffect(() => {
     fetchUserInfo();
@@ -60,8 +65,26 @@ function JiraDashboard({ session, onLogout }) {
       });
       setCurrentUser(response.data);
       setUserRole(response.data.role ?? 'user');
+      await fetchNotifications();
     } catch (error) {
       console.error('Error fetching user info:', error);
+    }
+  };
+
+  const fetchNotifications = async () => {
+    try {
+      setLoadingNotifications(true);
+      const response = await axios.get('/api/jira/notifications?status=unread', {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+      setNotifications(response.data ?? []);
+      if (response.data && response.data.length > 0) {
+        setShowNotificationsModal(true);
+      }
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+    } finally {
+      setLoadingNotifications(false);
     }
   };
 
@@ -89,6 +112,20 @@ function JiraDashboard({ session, onLogout }) {
       setAllIssues(response.data ?? []);
     } catch (error) {
       console.error('Error fetching issues:', error);
+    }
+  };
+
+  const fetchAllNotifications = async () => {
+    try {
+      setLoadingAllNotifications(true);
+      const response = await axios.get('/api/jira/notifications?status=all', {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+      setAllNotifications(response.data ?? []);
+    } catch (error) {
+      console.error('Error fetching all notifications:', error);
+    } finally {
+      setLoadingAllNotifications(false);
     }
   };
 
@@ -123,6 +160,35 @@ function JiraDashboard({ session, onLogout }) {
     }
   };
 
+  const handleDismissNotifications = async () => {
+    if (!notifications.length) {
+      setNotifications([]);
+      return;
+    }
+    const ids = notifications.map((n) => n.id);
+    try {
+      await axios.post(
+        '/api/jira/notifications/mark-read',
+        { ids },
+        { headers: { Authorization: `Bearer ${session.access_token}` } }
+      );
+    } catch (error) {
+      console.error('Error marking notifications as read:', error);
+    } finally {
+      setNotifications([]);
+      // Also update local history objects to is_read=true
+      if (allNotifications.length) {
+        const idSet = new Set(ids);
+        setAllNotifications((prev) =>
+          prev.map((n) =>
+            idSet.has(n.id) ? { ...n, is_read: true } : n
+          )
+        );
+      }
+      setShowNotificationsModal(false);
+    }
+  };
+
   const handleAddSubtask = (parentIssue) => {
     setParentIssueForSubtask(parentIssue);
     setShowIssueDetail(false);
@@ -147,6 +213,9 @@ function JiraDashboard({ session, onLogout }) {
   const handleNavViewChange = (view) => {
     setMainView(view);
     if (view === DASHBOARD_VIEWS.PROJECTS) setSelectedProject(null);
+    if (view === DASHBOARD_VIEWS.NOTIFICATIONS) {
+      fetchAllNotifications();
+    }
   };
 
   const handleBackToProjects = () => {
@@ -170,11 +239,60 @@ function JiraDashboard({ session, onLogout }) {
         selectedProject={selectedProject}
         onBackToProjects={handleBackToProjects}
         projectRole={selectedProject?.current_user_project_role ?? null}
+        notificationsCount={notifications.length}
       />
 
       <main className="dashboard-main">
         {mainView === DASHBOARD_VIEWS.USER_MANAGEMENT ? (
           <UserManagement session={session} />
+        ) : mainView === DASHBOARD_VIEWS.NOTIFICATIONS ? (
+          <div className="dashboard-main-content">
+            <div className="notifications-page-header">
+              <h1>Notifications</h1>
+              <div className="notifications-page-actions">
+                <button
+                  type="button"
+                  className="notifications-secondary-btn"
+                  onClick={fetchAllNotifications}
+                  disabled={loadingAllNotifications}
+                >
+                  {loadingAllNotifications ? 'Refreshing...' : 'Refresh'}
+                </button>
+                {notifications.length > 0 && (
+                  <button
+                    type="button"
+                    className="notifications-primary-btn"
+                    onClick={handleDismissNotifications}
+                  >
+                    Mark all as read
+                  </button>
+                )}
+              </div>
+            </div>
+            {allNotifications.length === 0 ? (
+              <div className="notifications-empty">
+                <p>You are all caught up. No new task notifications.</p>
+              </div>
+            ) : (
+              <ul className="notifications-list-page">
+                {allNotifications.map((n) => (
+                  <li key={n.id} className={`notifications-list-item ${n.is_read ? 'is-read' : ''}`}>
+                    <div className="notifications-list-item-icon">
+                      {n.is_read ? '✓' : '•'}
+                    </div>
+                    <div className="notifications-list-item-content">
+                      <p className="notifications-list-item-text">{n.message}</p>
+                      {n.created_at && (
+                        <p className="notifications-list-item-meta">
+                          {new Date(n.created_at).toLocaleString()}
+                        </p>
+                      )}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         ) : hasProjectSelected && mainView === DASHBOARD_VIEWS.WORK_ITEMS ? (
           <WorkItemsView
             session={session}
@@ -276,6 +394,51 @@ function JiraDashboard({ session, onLogout }) {
             setParentIssueForSubtask(null);
           }}
         />
+      )}
+
+      {showNotificationsModal && notifications.length > 0 && (
+        <div className="notifications-modal-overlay">
+          <div className="notifications-modal">
+            <div className="notifications-modal-header">
+              <h2>New task assignment{notifications.length > 1 ? 's' : ''}</h2>
+              <button
+                type="button"
+                className="notifications-modal-close"
+                onClick={handleDismissNotifications}
+                aria-label="Dismiss notifications"
+              >
+                ×
+              </button>
+            </div>
+            <p className="notifications-modal-subtitle">
+              You have {notifications.length} new task
+              {notifications.length > 1 ? 's' : ''} assigned to you.
+            </p>
+            <ul className="notifications-modal-list">
+              {notifications.map((n) => (
+                <li key={n.id} className="notifications-modal-item">
+                  {n.message}
+                </li>
+              ))}
+            </ul>
+            <div className="notifications-modal-actions">
+              <button
+                type="button"
+                className="notifications-secondary-btn"
+                onClick={() => setShowNotificationsModal(false)}
+              >
+                Remind me later
+              </button>
+              <button
+                type="button"
+                className="notifications-primary-btn"
+                onClick={handleDismissNotifications}
+              >
+                Mark as read
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
