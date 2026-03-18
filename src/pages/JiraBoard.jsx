@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import { api } from '../services/api';
 import * as XLSX from 'xlsx';
 import IssueCard from '../components/IssueCard.jsx';
 import './JiraBoard.css';
@@ -73,11 +73,8 @@ const JiraBoard = ({ project, session, onIssueClick, projectRole }) => {
       const params = { project_id: project.id };
       if (sprint) params.sprint_id = sprint.id;
       if (milestoneFilter) params.milestone_id = milestoneFilter;
-      const response = await axios.get('/api/jira/issues', {
+      const response = await api.get('/api/jira/issues', {
         params,
-        headers: {
-          Authorization: `Bearer ${session.access_token}`
-        }
       });
       setIssues(response.data);
     } catch (error) {
@@ -89,11 +86,8 @@ const JiraBoard = ({ project, session, onIssueClick, projectRole }) => {
 
   const fetchSprints = async () => {
     try {
-      const response = await axios.get('/api/jira/sprints', {
+      const response = await api.get('/api/jira/sprints', {
         params: { project_id: project.id, state: 'active' },
-        headers: {
-          Authorization: `Bearer ${session.access_token}`
-        }
       });
       if (response.data.length > 0) {
         setSprint(response.data[0]);
@@ -105,11 +99,7 @@ const JiraBoard = ({ project, session, onIssueClick, projectRole }) => {
 
   const fetchUsers = async () => {
     try {
-      const response = await axios.get('/api/users', {
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
-      });
+      const response = await api.get('/api/users');
       setUsers(response.data || []);
       setCanAssignTasks(true);
     } catch (error) {
@@ -124,9 +114,7 @@ const JiraBoard = ({ project, session, onIssueClick, projectRole }) => {
   const fetchMilestones = async () => {
     if (!project?.id) return;
     try {
-      const response = await axios.get(`/api/jira/projects/${project.id}/milestones`, {
-        headers: { Authorization: `Bearer ${session.access_token}` },
-      });
+      const response = await api.get(`/api/jira/projects/${project.id}/milestones`);
       setMilestones(response.data ?? []);
     } catch (error) {
       console.error('Error fetching milestones:', error);
@@ -137,13 +125,8 @@ const JiraBoard = ({ project, session, onIssueClick, projectRole }) => {
   const handleStatusChange = async (issueId, newStatus) => {
     try {
       showToast('Updating task status...', 'info', 1500);
-      await axios.put(`/api/jira/issues/${issueId}`, 
+      await api.put(`/api/jira/issues/${issueId}`, 
         { status: newStatus },
-        {
-          headers: {
-            Authorization: `Bearer ${session.access_token}`
-          }
-        }
       );
       fetchIssues();
       showToast('Task status updated', 'success');
@@ -167,14 +150,9 @@ const JiraBoard = ({ project, session, onIssueClick, projectRole }) => {
   const handleAssign = async (issueId, userId) => {
     try {
       showToast('Assigning task...', 'info', 1500);
-      await axios.put(
+      await api.put(
         `/api/jira/issues/${issueId}`,
-        { assignee_id: userId },
-        {
-          headers: {
-            Authorization: `Bearer ${session.access_token}`,
-          },
-        }
+        { assignee_id: userId }
       );
       fetchIssues();
       showToast('Task assignee updated', 'success');

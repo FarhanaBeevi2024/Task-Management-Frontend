@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import { api } from '../services/api';
 import ClientForm from './ClientForm.jsx';
 import './ProjectForm.css';
 
@@ -21,9 +21,7 @@ function ProjectForm({ session, onSubmit, onCancel }) {
 
   const fetchClients = async () => {
     try {
-      const response = await axios.get('/api/jira/clients', {
-        headers: { Authorization: `Bearer ${session.access_token}` },
-      });
+      const response = await api.get('/api/jira/clients');
       setClients(response.data ?? []);
     } catch (error) {
       console.error('Error fetching clients:', error);
@@ -32,9 +30,7 @@ function ProjectForm({ session, onSubmit, onCancel }) {
 
   const handleCreateClient = async (clientData) => {
     try {
-      const response = await axios.post('/api/jira/clients', clientData, {
-        headers: { Authorization: `Bearer ${session.access_token}` },
-      });
+      const response = await api.post('/api/jira/clients', clientData);
       setClientId(response.data.id);
       setShowClientForm(false);
       fetchClients();

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../services/supabase';
 import Login from '../components/Login.jsx';
-import JiraDashboard from './JiraDashboard.jsx';
+import AuthenticatedHome from './AuthenticatedHome.jsx';
+import { setApiAccessToken } from '../services/api';
 
 function App() {
   const [session, setSession] = useState(null);
@@ -11,6 +12,7 @@ function App() {
     // Check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
+      setApiAccessToken(session?.access_token || null);
       setLoading(false);
     });
 
@@ -19,6 +21,7 @@ function App() {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
+      setApiAccessToken(session?.access_token || null);
     });
 
     return () => subscription.unsubscribe();
@@ -26,11 +29,13 @@ function App() {
 
   const handleLogin = (newSession) => {
     setSession(newSession);
+    setApiAccessToken(newSession?.access_token || null);
   };
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
     setSession(null);
+    setApiAccessToken(null);
   };
 
   if (loading) {
@@ -49,7 +54,7 @@ function App() {
   return (
     <div className="App">
       {session ? (
-        <JiraDashboard session={session} onLogout={handleLogout} />
+        <AuthenticatedHome session={session} onLogout={handleLogout} />
       ) : (
         <Login onLogin={handleLogin} />
       )}

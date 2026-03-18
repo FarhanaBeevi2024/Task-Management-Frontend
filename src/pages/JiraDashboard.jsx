@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import { api } from '../services/api';
 import DashboardNavBar, { DASHBOARD_VIEWS } from '../components/DashboardNavBar.jsx';
 import ProjectsView from '../components/ProjectsView.jsx';
 import ProjectForm from '../components/ProjectForm.jsx';
@@ -53,7 +53,7 @@ function JiraDashboard({ session, onLogout }) {
   useEffect(() => {
     if (
       selectedProject?.current_user_project_role === 'client' &&
-      mainView === DASHBOARD_VIEWS.WORK_ITEMS
+      (mainView === DASHBOARD_VIEWS.WORK_ITEMS || mainView === DASHBOARD_VIEWS.CALENDAR)
     ) {
       setMainView(DASHBOARD_VIEWS.BOARD);
     }
@@ -61,9 +61,7 @@ function JiraDashboard({ session, onLogout }) {
 
   const fetchUserInfo = async () => {
     try {
-      const response = await axios.get('/api/user', {
-        headers: { Authorization: `Bearer ${session.access_token}` },
-      });
+      const response = await api.get('/api/user');
       setCurrentUser(response.data);
       setUserRole(response.data.role ?? 'user');
       await fetchNotifications();
@@ -75,9 +73,7 @@ function JiraDashboard({ session, onLogout }) {
   const fetchNotifications = async () => {
     try {
       setLoadingNotifications(true);
-      const response = await axios.get('/api/jira/notifications?status=unread', {
-        headers: { Authorization: `Bearer ${session.access_token}` },
-      });
+      const response = await api.get('/api/jira/notifications?status=unread');
       setNotifications(response.data ?? []);
       if (response.data && response.data.length > 0) {
         setShowNotificationsModal(true);
@@ -92,9 +88,7 @@ function JiraDashboard({ session, onLogout }) {
   const fetchProjects = async () => {
     try {
       setLoading(true);
-      const response = await axios.get('/api/jira/projects', {
-        headers: { Authorization: `Bearer ${session.access_token}` },
-      });
+      const response = await api.get('/api/jira/projects');
       setProjects(response.data ?? []);
     } catch (error) {
       console.error('Error fetching projects:', error);
@@ -106,9 +100,8 @@ function JiraDashboard({ session, onLogout }) {
   const fetchAllIssues = async () => {
     if (!selectedProject) return;
     try {
-      const response = await axios.get('/api/jira/issues', {
+      const response = await api.get('/api/jira/issues', {
         params: { project_id: selectedProject.id },
-        headers: { Authorization: `Bearer ${session.access_token}` },
       });
       setAllIssues(response.data ?? []);
     } catch (error) {
@@ -119,9 +112,7 @@ function JiraDashboard({ session, onLogout }) {
   const fetchAllNotifications = async () => {
     try {
       setLoadingAllNotifications(true);
-      const response = await axios.get('/api/jira/notifications?status=all', {
-        headers: { Authorization: `Bearer ${session.access_token}` },
-      });
+      const response = await api.get('/api/jira/notifications?status=all');
       setAllNotifications(response.data ?? []);
     } catch (error) {
       console.error('Error fetching all notifications:', error);
@@ -132,9 +123,7 @@ function JiraDashboard({ session, onLogout }) {
 
   const handleCreateProject = async (projectData) => {
     try {
-      await axios.post('/api/jira/projects', projectData, {
-        headers: { Authorization: `Bearer ${session.access_token}` },
-      });
+      await api.post('/api/jira/projects', projectData);
       setShowProjectForm(false);
       fetchProjects();
     } catch (error) {
@@ -143,13 +132,29 @@ function JiraDashboard({ session, onLogout }) {
     }
   };
 
+  const handleDeleteProject = async (project) => {
+    if (!project?.id) return;
+    const ok = window.confirm(`Delete project "${project.name}"?\n\nThis will permanently delete the project and its related data.`);
+    if (!ok) return;
+    try {
+      await api.delete(`/api/jira/projects/${project.id}`);
+      // If deleting the current project, navigate back
+      if (selectedProject?.id === project.id) {
+        setSelectedProject(null);
+        setMainView(DASHBOARD_VIEWS.PROJECTS);
+      }
+      fetchProjects();
+    } catch (error) {
+      console.error('Error deleting project:', error);
+      alert(error.response?.data?.error ?? 'Failed to delete project');
+    }
+  };
+
   const handleCreateIssue = async (issueData) => {
     try {
-      await axios.post('/api/jira/issues', {
+      await api.post('/api/jira/issues', {
         ...issueData,
         project_id: selectedProject.id,
-      }, {
-        headers: { Authorization: `Bearer ${session.access_token}` },
       });
       setShowIssueForm(false);
       setSelectedIssue(null);
@@ -168,10 +173,9 @@ function JiraDashboard({ session, onLogout }) {
     }
     const ids = notifications.map((n) => n.id);
     try {
-      await axios.post(
+      await api.post(
         '/api/jira/notifications/mark-read',
-        { ids },
-        { headers: { Authorization: `Bearer ${session.access_token}` } }
+        { ids }
       );
     } catch (error) {
       console.error('Error marking notifications as read:', error);
@@ -340,6 +344,7 @@ function JiraDashboard({ session, onLogout }) {
           <ProjectsView
             projects={projects}
             onSelectProject={handleSelectProject}
+            onDeleteProject={handleDeleteProject}
             onCreateProjectClick={() => setShowProjectForm(true)}
             title="Project updates"
             showCreateButton={false}
@@ -348,6 +353,7 @@ function JiraDashboard({ session, onLogout }) {
           <ProjectsView
             projects={projects}
             onSelectProject={handleSelectProject}
+            onDeleteProject={handleDeleteProject}
             onCreateProjectClick={() => setShowProjectForm(true)}
             title="Projects"
             showCreateButton={allowCreateProject}

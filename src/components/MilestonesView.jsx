@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import { api } from '../services/api';
 import { canManageMilestones } from '../config/accessConfig.js';
 import './MilestonesView.css';
 
@@ -35,12 +35,9 @@ function MilestonesView({ project, session, userRole }) {
       setLoading(true);
       setError('');
       const [milestonesRes, issuesRes] = await Promise.all([
-        axios.get(`/api/jira/projects/${project.id}/milestones`, {
-          headers: { Authorization: `Bearer ${session.access_token}` },
-        }),
-        axios.get('/api/jira/issues', {
+        api.get(`/api/jira/projects/${project.id}/milestones`),
+        api.get('/api/jira/issues', {
           params: { project_id: project.id },
-          headers: { Authorization: `Bearer ${session.access_token}` },
         }),
       ]);
       setMilestones(milestonesRes.data ?? []);
@@ -91,19 +88,19 @@ function MilestonesView({ project, session, userRole }) {
     try {
       setSaving(true);
       if (editingMilestone) {
-        await axios.put(`/api/jira/milestones/${editingMilestone.id}`, {
+        await api.put(`/api/jira/milestones/${editingMilestone.id}`, {
           version: formVersion.trim(),
           planned_date: formPlannedDate || null,
           status: formStatus,
           description: formDescription.trim() || null,
-        }, { headers: { Authorization: `Bearer ${session.access_token}` } });
+        });
       } else {
-        await axios.post(`/api/jira/projects/${project.id}/milestones`, {
+        await api.post(`/api/jira/projects/${project.id}/milestones`, {
           version: formVersion.trim(),
           planned_date: formPlannedDate || null,
           status: formStatus,
           description: formDescription.trim() || null,
-        }, { headers: { Authorization: `Bearer ${session.access_token}` } });
+        });
       }
       closeForm();
       fetchData();
@@ -118,9 +115,7 @@ function MilestonesView({ project, session, userRole }) {
   const handleDelete = async (milestone) => {
     if (!window.confirm(`Delete milestone "${milestone.version}"? Issues will be unassigned from this milestone.`)) return;
     try {
-      await axios.delete(`/api/jira/milestones/${milestone.id}`, {
-        headers: { Authorization: `Bearer ${session.access_token}` },
-      });
+      await api.delete(`/api/jira/milestones/${milestone.id}`);
       fetchData();
     } catch (err) {
       console.error('Error deleting milestone:', err);

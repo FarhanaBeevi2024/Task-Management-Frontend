@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import { api } from '../services/api';
 import './IssueForm.css';
 
 const IssueForm = ({ project, issue, parentIssue, session, onSubmit, onCancel, userRole, issues = [] }) => {
@@ -56,11 +56,7 @@ const IssueForm = ({ project, issue, parentIssue, session, onSubmit, onCancel, u
 
   const fetchIssueTypes = async () => {
     try {
-      const response = await axios.get('/api/jira/issue-types', {
-        headers: {
-          Authorization: `Bearer ${session.access_token}`
-        }
-      });
+      const response = await api.get('/api/jira/issue-types');
       setIssueTypes(response.data);
       if (response.data.length > 0 && !issue) {
         setIssueTypeId(response.data[0].id);
@@ -73,11 +69,8 @@ const IssueForm = ({ project, issue, parentIssue, session, onSubmit, onCancel, u
   const fetchReleases = async () => {
     if (!project) return;
     try {
-      const response = await axios.get('/api/jira/releases', {
+      const response = await api.get('/api/jira/releases', {
         params: { project_id: project.id, is_active: true },
-        headers: {
-          Authorization: `Bearer ${session.access_token}`
-        }
       });
       setReleases(response.data);
     } catch (error) {
@@ -88,9 +81,7 @@ const IssueForm = ({ project, issue, parentIssue, session, onSubmit, onCancel, u
   const fetchMilestones = async () => {
     if (!project?.id) return;
     try {
-      const response = await axios.get(`/api/jira/projects/${project.id}/milestones`, {
-        headers: { Authorization: `Bearer ${session.access_token}` },
-      });
+      const response = await api.get(`/api/jira/projects/${project.id}/milestones`);
       setMilestones(response.data ?? []);
     } catch (error) {
       console.error('Error fetching milestones:', error);
@@ -99,9 +90,7 @@ const IssueForm = ({ project, issue, parentIssue, session, onSubmit, onCancel, u
 
   const fetchTeamMembers = async () => {
     try {
-      const response = await axios.get('/api/users', {
-        headers: { Authorization: `Bearer ${session.access_token}` }
-      });
+      const response = await api.get('/api/users');
       setTeamMembers(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
       console.error('Error fetching team members:', error);

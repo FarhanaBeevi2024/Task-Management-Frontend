@@ -6,7 +6,7 @@ import './ProjectsView.css';
  * Projects list view: header, grid of project cards, and create button.
  * Does not include the create-project modal; parent controls that.
  */
-function ProjectsView({ projects, onSelectProject, onCreateProjectClick, title = 'Projects', showCreateButton = true }) {
+function ProjectsView({ projects, onSelectProject, onCreateProjectClick, onDeleteProject, title = 'Projects', showCreateButton = true }) {
   return (
     <>
       <div className="projects-view-header">
@@ -38,6 +38,7 @@ function ProjectsView({ projects, onSelectProject, onCreateProjectClick, title =
               key={project.id}
               project={project}
               onClick={() => onSelectProject(project)}
+              onDelete={onDeleteProject ? () => onDeleteProject(project) : undefined}
             />
           ))
         )}

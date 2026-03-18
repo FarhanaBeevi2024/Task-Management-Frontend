@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import { api } from '../services/api';
 import './IssueDetail.css';
 
 const statusOptions = [
@@ -66,9 +66,7 @@ const IssueDetail = ({ issue, session, onClose, onEdit, onUpdate, onAddSubtask, 
 
   useEffect(() => {
     if (canAssign && session) {
-      axios.get('/api/users', {
-        headers: { Authorization: `Bearer ${session.access_token}` }
-      }).then((res) => {
+      api.get('/api/users').then((res) => {
         setTeamMembers(Array.isArray(res.data) ? res.data : []);
       }).catch((err) => console.error('Error fetching team members:', err));
     }
@@ -76,9 +74,7 @@ const IssueDetail = ({ issue, session, onClose, onEdit, onUpdate, onAddSubtask, 
 
   useEffect(() => {
     if (issue?.project?.id && session) {
-      axios.get(`/api/jira/projects/${issue.project.id}/milestones`, {
-        headers: { Authorization: `Bearer ${session.access_token}` },
-      }).then((res) => setMilestones(res.data ?? [])).catch(() => setMilestones([]));
+      api.get(`/api/jira/projects/${issue.project.id}/milestones`).then((res) => setMilestones(res.data ?? [])).catch(() => setMilestones([]));
     }
   }, [issue?.project?.id, session]);
 
@@ -94,9 +90,7 @@ const IssueDetail = ({ issue, session, onClose, onEdit, onUpdate, onAddSubtask, 
     if (!issue?.id || !session) return;
     try {
       setLoadingActivity(true);
-      const response = await axios.get(`/api/jira/issues/${issue.id}/activity-logs`, {
-        headers: { Authorization: `Bearer ${session.access_token}` },
-      });
+      const response = await api.get(`/api/jira/issues/${issue.id}/activity-logs`);
       setActivityLogs(Array.isArray(response.data) ? response.data : []);
     } catch (err) {
       console.error('Error fetching activity logs:', err);
@@ -109,11 +103,7 @@ const IssueDetail = ({ issue, session, onClose, onEdit, onUpdate, onAddSubtask, 
   const fetchComments = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`/api/jira/issues/${issue.id}/comments`, {
-        headers: {
-          Authorization: `Bearer ${session.access_token}`
-        }
-      });
+      const response = await api.get(`/api/jira/issues/${issue.id}/comments`);
       setComments(response.data);
     } catch (error) {
       console.error('Error fetching comments:', error);
@@ -125,7 +115,7 @@ const IssueDetail = ({ issue, session, onClose, onEdit, onUpdate, onAddSubtask, 
   const handleSave = async () => {
     try {
       setSaving(true);
-      const response = await axios.put(
+      const response = await api.put(
         `/api/jira/issues/${issue.id}`,
         {
           summary,
@@ -141,11 +131,6 @@ const IssueDetail = ({ issue, session, onClose, onEdit, onUpdate, onAddSubtask, 
           assignee_id: assigneeId || null,
           milestone_id: milestoneId || null,
           exposed_to_client: exposedToClient
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${session.access_token}`
-          }
         }
       );
       if (onUpdate) onUpdate(response.data);
@@ -207,12 +192,8 @@ const IssueDetail = ({ issue, session, onClose, onEdit, onUpdate, onAddSubtask, 
     if (!newComment.trim()) return;
 
     try {
-      await axios.post(`/api/jira/issues/${issue.id}/comments`, {
+      await api.post(`/api/jira/issues/${issue.id}/comments`, {
         body: newComment
-      }, {
-        headers: {
-          Authorization: `Bearer ${session.access_token}`
-        }
       });
       setNewComment('');
       fetchComments();

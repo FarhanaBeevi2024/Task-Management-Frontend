@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import { api } from '../services/api';
 import './UserManagement.css';
 
 const ROLE_OPTIONS = [
@@ -26,11 +26,7 @@ function UserManagement({ session }) {
     try {
       setLoading(true);
       setError('');
-      const response = await axios.get('/api/users', {
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
-      });
+      const response = await api.get('/api/users');
       setUsers(response.data || []);
     } catch (err) {
       console.error('Error fetching users:', err);
@@ -44,14 +40,9 @@ function UserManagement({ session }) {
     try {
       setSavingUserId(userId);
       setError('');
-      await axios.put(
+      await api.put(
         `/api/admin/users/${userId}/role`,
-        { role: newRole },
-        {
-          headers: {
-            Authorization: `Bearer ${session.access_token}`,
-          },
-        }
+        { role: newRole }
       );
       setUsers((prev) =>
         prev.map((u) => (u.user_id === userId ? { ...u, role: newRole } : u))
@@ -68,14 +59,9 @@ function UserManagement({ session }) {
     try {
       setTogglingUserId(userId);
       setError('');
-      await axios.put(
+      await api.put(
         `/api/admin/users/${userId}/active`,
-        { active: !currentActive },
-        {
-          headers: {
-            Authorization: `Bearer ${session.access_token}`,
-          },
-        }
+        { active: !currentActive }
       );
       setUsers((prev) =>
         prev.map((u) =>

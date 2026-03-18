@@ -1,0 +1,188 @@
+.sa-container {
+  min-height: 100vh;
+  padding: 1.5rem;
+  background: #f8fafc;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+}
+
+.sa-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.sa-header h1 {
+  margin: 0;
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.sa-header p {
+  margin: 0.25rem 0 0;
+  color: #64748b;
+}
+
+.sa-header-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.sa-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin: 1rem 0;
+}
+
+.sa-stat {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 0.85rem 1rem;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+}
+
+.sa-stat-label {
+  color: #64748b;
+  font-size: 0.85rem;
+}
+
+.sa-stat-value {
+  color: #0f172a;
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-top: 0.25rem;
+}
+
+.sa-card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 1rem;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+  margin-top: 0.75rem;
+}
+
+.sa-card h2 {
+  margin: 0 0 0.75rem;
+  font-size: 1.05rem;
+  color: #0f172a;
+}
+
+.sa-form {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.sa-input {
+  flex: 1;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  padding: 0.65rem 0.75rem;
+  outline: none;
+}
+
+.sa-btn {
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 0.65rem 0.9rem;
+  cursor: pointer;
+}
+
+.sa-btn-primary {
+  border-color: #4f46e5;
+  background: #4f46e5;
+  color: #ffffff;
+}
+
+.sa-btn-secondary {
+  background: #f1f5f9;
+}
+
+.sa-error {
+  margin: 0.75rem 0;
+  padding: 0.7rem 0.85rem;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #991b1b;
+  border-radius: 12px;
+}
+
+.sa-loading,
+.sa-empty {
+  color: #64748b;
+  padding: 0.75rem 0.25rem;
+}
+
+.sa-table-wrap {
+  overflow: auto;
+}
+
+.sa-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.sa-table th,
+.sa-table td {
+  text-align: left;
+  padding: 0.75rem 0.6rem;
+  border-top: 1px solid #e5e7eb;
+  font-size: 0.92rem;
+  color: #0f172a;
+  vertical-align: top;
+}
+
+.sa-table th {
+  color: #475569;
+  font-weight: 600;
+  background: #fafafa;
+  border-top: none;
+}
+
+.sa-org-name {
+  font-weight: 600;
+}
+
+.sa-org-id {
+  font-size: 0.76rem;
+  color: #94a3b8;
+  margin-top: 0.2rem;
+}
+
+.sa-pill {
+  display: inline-flex;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  border: 1px solid #e5e7eb;
+  background: #f8fafc;
+  color: #334155;
+}
+
+.sa-pill.active {
+  background: #ecfdf5;
+  border-color: #bbf7d0;
+  color: #166534;
+}
+
+.sa-pill.inactive {
+  background: #fff7ed;
+  border-color: #fed7aa;
+  color: #9a3412;
+}
+
+.sa-link {
+  border: none;
+  background: transparent;
+  color: #4f46e5;
+  cursor: pointer;
+  font-weight: 600;
+  padding: 0;
+}
+

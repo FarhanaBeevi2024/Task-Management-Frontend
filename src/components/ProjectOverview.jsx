@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import { api } from '../services/api';
 import './ProjectOverview.css';
 
 const PROJECT_ROLES = [
@@ -44,9 +44,7 @@ function ProjectOverview({ project, session, userRole }) {
     try {
       setLoadingMembers(true);
       setError('');
-      const response = await axios.get(`/api/jira/projects/${project.id}/members`, {
-        headers: { Authorization: `Bearer ${session.access_token}` },
-      });
+      const response = await api.get(`/api/jira/projects/${project.id}/members`);
       setMembers(response.data || []);
     } catch (err) {
       console.error('Error fetching project members:', err);
@@ -59,9 +57,7 @@ function ProjectOverview({ project, session, userRole }) {
   const fetchUsers = async () => {
     try {
       setLoadingUsers(true);
-      const response = await axios.get('/api/users', {
-        headers: { Authorization: `Bearer ${session.access_token}` },
-      });
+      const response = await api.get('/api/users');
       setUsers(response.data || []);
     } catch (err) {
       console.error('Error fetching users:', err);
@@ -80,10 +76,9 @@ function ProjectOverview({ project, session, userRole }) {
         name: localProject.name,
         description: localProject.description,
       };
-      const response = await axios.put(
+      const response = await api.put(
         `/api/jira/projects/${project.id}`,
-        payload,
-        { headers: { Authorization: `Bearer ${session.access_token}` } }
+        payload
       );
       setLocalProject(response.data);
       setEditing(false);
@@ -100,13 +95,12 @@ function ProjectOverview({ project, session, userRole }) {
     if (!selectedUserId || !selectedProjectRole || !project) return;
     try {
       setError('');
-      await axios.post(
+      await api.post(
         `/api/jira/projects/${project.id}/members`,
         {
           user_id: selectedUserId,
           project_role: selectedProjectRole,
-        },
-        { headers: { Authorization: `Bearer ${session.access_token}` } }
+        }
       );
       setSelectedUserId('');
       setSelectedProjectRole('team_member');
@@ -122,10 +116,7 @@ function ProjectOverview({ project, session, userRole }) {
     if (!window.confirm('Remove this user from the project?')) return;
     try {
       setError('');
-      await axios.delete(
-        `/api/jira/projects/${project.id}/members/${memberUserId}`,
-        { headers: { Authorization: `Bearer ${session.access_token}` } }
-      );
+      await api.delete(`/api/jira/projects/${project.id}/members/${memberUserId}`);
       setMembers((prev) => prev.filter((m) => m.user_id !== memberUserId));
     } catch (err) {
       console.error('Error removing project member:', err);

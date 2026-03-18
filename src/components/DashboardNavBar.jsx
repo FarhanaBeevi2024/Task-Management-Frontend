@@ -84,14 +84,16 @@ function DashboardNavBar({ currentUser, mainView, onViewChange, onLogout, userRo
                 <span className="menu-icon">📋</span>
                 <span>Board</span>
               </button>
-              <button
-                type="button"
-                className={`menu-item ${mainView === VIEWS.CALENDAR ? 'active' : ''}`}
-                onClick={() => handleNavClick(VIEWS.CALENDAR)}
-              >
-                <span className="menu-icon">📅</span>
-                <span>Calendar</span>
-              </button>
+              {!isProjectRoleClient && (
+                <button
+                  type="button"
+                  className={`menu-item ${mainView === VIEWS.CALENDAR ? 'active' : ''}`}
+                  onClick={() => handleNavClick(VIEWS.CALENDAR)}
+                >
+                  <span className="menu-icon">📅</span>
+                  <span>Calendar</span>
+                </button>
+              )}
               {!isProjectRoleClient && (
                 <button
                   type="button"

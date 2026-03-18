@@ -21,6 +21,34 @@
   margin-bottom: 1rem;
 }
 
+.project-header-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.project-delete-btn {
+  border: 1px solid #fecaca;
+  background: #fef2f2;
+  color: #dc2626;
+  border-radius: 10px;
+  padding: 0.25rem 0.4rem;
+  cursor: pointer;
+  line-height: 1;
+  transition: background 0.15s, border-color 0.15s, transform 0.15s;
+}
+
+.project-delete-btn:hover {
+  background: #fee2e2;
+  border-color: #fca5a5;
+  color: #b91c1c;
+  transform: translateY(-1px);
+}
+
+.project-delete-btn:active {
+  transform: translateY(0);
+}
+
 .project-key {
   font-weight: 700;
   font-size: 0.875rem;

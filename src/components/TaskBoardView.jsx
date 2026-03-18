@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import { api } from '../services/api';
 import JiraBoard from '../pages/JiraBoard.jsx';
 import './TaskBoardView.css';
 
@@ -25,10 +25,8 @@ function TaskBoardView({
       return;
     }
     let cancelled = false;
-    axios
-      .get(`/api/jira/projects/${project.id}/my-role`, {
-        headers: { Authorization: `Bearer ${session?.access_token}` },
-      })
+    api
+      .get(`/api/jira/projects/${project.id}/my-role`)
       .then((res) => {
         if (!cancelled && res.data?.project_role != null) {
           setFetchedRole(res.data.project_role);

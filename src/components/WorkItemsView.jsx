@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import { api } from '../services/api';
 import './WorkItemsView.css';
 
 function WorkItemsView({ session, currentUser, onIssueClick, project }) {
@@ -20,9 +20,8 @@ function WorkItemsView({ session, currentUser, onIssueClick, project }) {
       if (filter === 'assigned_to_me') {
         params.assignee_id = currentUser.id;
       }
-      const response = await axios.get('/api/jira/issues', {
+      const response = await api.get('/api/jira/issues', {
         params,
-        headers: { Authorization: `Bearer ${session.access_token}` },
       });
       setIssues(response.data ?? []);
     } catch (error) {

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import { api } from '../services/api';
 import TaskList from '../components/TaskList.jsx';
 import TaskForm from '../components/TaskForm.jsx';
 import './Dashboard.css';
@@ -25,11 +25,7 @@ const Dashboard = ({ session, onLogout }) => {
 
   const fetchUserInfo = async () => {
     try {
-      const response = await axios.get('/api/user', {
-        headers: {
-          Authorization: `Bearer ${session.access_token}`
-        }
-      });
+      const response = await api.get('/api/user');
       setCurrentUser(response.data);
       setUserRole(response.data.role);
     } catch (error) {
@@ -39,11 +35,7 @@ const Dashboard = ({ session, onLogout }) => {
 
   const fetchUsers = async () => {
     try {
-      const response = await axios.get('/api/users', {
-        headers: {
-          Authorization: `Bearer ${session.access_token}`
-        }
-      });
+      const response = await api.get('/api/users');
       setUsers(response.data);
     } catch (error) {
       console.error('Error fetching users:', error);
@@ -53,11 +45,7 @@ const Dashboard = ({ session, onLogout }) => {
   const fetchTasks = async () => {
     try {
       setLoading(true);
-      const response = await axios.get('/api/tasks', {
-        headers: {
-          Authorization: `Bearer ${session.access_token}`
-        }
-      });
+      const response = await api.get('/api/tasks');
       setTasks(response.data);
     } catch (error) {
       console.error('Error fetching tasks:', error);
@@ -68,11 +56,7 @@ const Dashboard = ({ session, onLogout }) => {
 
   const handleCreateTask = async (taskData) => {
     try {
-      await axios.post('/api/tasks', taskData, {
-        headers: {
-          Authorization: `Bearer ${session.access_token}`
-        }
-      });
+      await api.post('/api/tasks', taskData);
       setShowForm(false);
       fetchTasks();
     } catch (error) {
@@ -83,11 +67,7 @@ const Dashboard = ({ session, onLogout }) => {
 
   const handleUpdateTask = async (taskId, updates) => {
     try {
-      await axios.put(`/api/tasks/${taskId}`, updates, {
-        headers: {
-          Authorization: `Bearer ${session.access_token}`
-        }
-      });
+      await api.put(`/api/tasks/${taskId}`, updates);
       fetchTasks();
     } catch (error) {
       console.error('Error updating task:', error);
@@ -101,11 +81,7 @@ const Dashboard = ({ session, onLogout }) => {
     }
 
     try {
-      await axios.delete(`/api/tasks/${taskId}`, {
-        headers: {
-          Authorization: `Bearer ${session.access_token}`
-        }
-      });
+      await api.delete(`/api/tasks/${taskId}`);
       fetchTasks();
     } catch (error) {
       console.error('Error deleting task:', error);
