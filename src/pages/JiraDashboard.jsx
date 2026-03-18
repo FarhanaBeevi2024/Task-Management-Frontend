@@ -9,6 +9,7 @@ import IssueForm from '../components/IssueForm.jsx';
 import IssueDetail from '../components/IssueDetail.jsx';
 import UserManagement from '../components/UserManagement.jsx';
 import WorkItemsView from '../components/WorkItemsView.jsx';
+import CalendarView from '../components/CalendarView.jsx';
 import MilestonesView from '../components/MilestonesView.jsx';
 import { canUserCreateProject } from '../config/accessConfig.js';
 import './JiraDashboard.css';
@@ -292,6 +293,10 @@ function JiraDashboard({ session, onLogout }) {
                 ))}
               </ul>
             )}
+          </div>
+        ) : hasProjectSelected && mainView === DASHBOARD_VIEWS.CALENDAR ? (
+          <div className="dashboard-main-content">
+            <CalendarView project={selectedProject} issues={allIssues} />
           </div>
         ) : hasProjectSelected && mainView === DASHBOARD_VIEWS.WORK_ITEMS ? (
           <WorkItemsView
