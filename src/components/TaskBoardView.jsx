@@ -5,7 +5,7 @@ import './TaskBoardView.css';
 
 /**
  * Board page when a project is selected: header with back link and the issue board.
- * Clients (project_role === 'client') see only IN PROGRESS and COMPLETED columns.
+ * Clients (project_role === 'client') see TO DO (only tasks they created), IN PROGRESS, and COMPLETED.
  */
 function TaskBoardView({
   project,

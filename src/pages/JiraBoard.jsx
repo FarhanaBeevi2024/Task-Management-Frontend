@@ -33,8 +33,9 @@ const JiraBoard = ({ project, session, onIssueClick, projectRole }) => {
     { key: 'in_review', label: 'In Review' },
     { key: 'done', label: 'Completed' }
   ];
+  // Clients see To Do (own tasks only — filtered on API), In Progress, and Completed; not In Review.
   const statuses = isClientView
-    ? allStatuses.filter((s) => s.key === 'in_progress' || s.key === 'done')
+    ? allStatuses.filter((s) => s.key === 'to_do' || s.key === 'in_progress' || s.key === 'done')
     : allStatuses;
 
   const showToast = (message, type = 'info', duration = 2500) => {
@@ -60,9 +61,9 @@ const JiraBoard = ({ project, session, onIssueClick, projectRole }) => {
     if (project && milestoneFilter !== undefined) fetchIssues();
   }, [milestoneFilter]);
 
-  // Client view: only IN PROGRESS and COMPLETED are valid filters
+  // Client view: In Review is hidden — reset filter if it was set
   useEffect(() => {
-    if (isClientView && (statusFilter === 'to_do' || statusFilter === 'in_review')) {
+    if (isClientView && statusFilter === 'in_review') {
       setStatusFilter('all');
     }
   }, [isClientView, statusFilter]);
@@ -212,7 +213,7 @@ const JiraBoard = ({ project, session, onIssueClick, projectRole }) => {
             aria-label="Filter by status"
           >
             <option value="all">All statuses</option>
-            {!isClientView && <option value="to_do">To Do</option>}
+            <option value="to_do">To Do</option>
             <option value="in_progress">In Progress</option>
             {!isClientView && <option value="in_review">In Review</option>}
             <option value="done">Completed</option>

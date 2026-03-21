@@ -9,9 +9,19 @@
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
+/* Tasks created by a client user (reporter / created_by) */
+.issue-card.issue-card--client-created {
+  background: #fce7f3;
+  border-color: #f9a8d4;
+}
+
 .issue-card:hover {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   border-color: #d1d5db;
+}
+
+.issue-card.issue-card--client-created:hover {
+  border-color: #f472b6;
 }
 
 .issue-header {

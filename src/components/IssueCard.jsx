@@ -36,9 +36,15 @@ const IssueCard = ({ issue, onClick, onStatusChange, users = [], onAssign, onDra
     ? assigneeEmail.charAt(0).toUpperCase()
     : '?';
 
+  const creatorId = issue.created_by || issue.reporter_id;
+  const createdByClient =
+    issue.created_by_client === true ||
+    (!!creatorId &&
+      users.some((u) => u.user_id === creatorId && u.role === 'client'));
+
   return (
     <div
-      className="issue-card"
+      className={`issue-card${createdByClient ? ' issue-card--client-created' : ''}`}
       onClick={onClick}
       draggable
       onDragStart={(e) => {
