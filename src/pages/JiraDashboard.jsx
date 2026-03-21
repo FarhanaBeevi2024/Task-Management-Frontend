@@ -11,7 +11,8 @@ import UserManagement from '../components/UserManagement.jsx';
 import WorkItemsView from '../components/WorkItemsView.jsx';
 import CalendarView from '../components/CalendarView.jsx';
 import MilestonesView from '../components/MilestonesView.jsx';
-import { canUserCreateProject } from '../config/accessConfig.js';
+import RolesManagement from '../components/RolesManagement.jsx';
+import { useAccessConfig } from '../context/AccessConfigContext.jsx';
 import './JiraDashboard.css';
 
 /**
@@ -19,6 +20,12 @@ import './JiraDashboard.css';
  * Composes DashboardNavBar, ProjectsView, RecentIssuesView, TaskBoardView, and modals.
  */
 function JiraDashboard({ session, onLogout }) {
+  const {
+    canUserCreateProject,
+    canCreateIssues,
+    canManageProjectMembers,
+    canShowMilestonesNav,
+  } = useAccessConfig();
   const [projects, setProjects] = useState([]);
   const [selectedProject, setSelectedProject] = useState(null);
   const [selectedIssue, setSelectedIssue] = useState(null);
@@ -49,7 +56,7 @@ function JiraDashboard({ session, onLogout }) {
     }
   }, [selectedProject, refreshKey]);
 
-  // Clients (project role) must not see Work items: redirect to Board if they land on it
+  // Clients (project role) must not see Work items / Calendar: redirect to Board if they land on it
   useEffect(() => {
     if (
       selectedProject?.current_user_project_role === 'client' &&
@@ -58,6 +65,21 @@ function JiraDashboard({ session, onLogout }) {
       setMainView(DASHBOARD_VIEWS.BOARD);
     }
   }, [selectedProject?.current_user_project_role, mainView]);
+
+  // Hide Milestones for client roles unless Access Control enables canManageMilestones for them
+  useEffect(() => {
+    if (
+      mainView === DASHBOARD_VIEWS.MILESTONES &&
+      !canShowMilestonesNav(userRole, selectedProject?.current_user_project_role ?? null)
+    ) {
+      setMainView(DASHBOARD_VIEWS.BOARD);
+    }
+  }, [
+    mainView,
+    userRole,
+    selectedProject?.current_user_project_role,
+    canShowMilestonesNav,
+  ]);
 
   const fetchUserInfo = async () => {
     try {
@@ -74,8 +96,9 @@ function JiraDashboard({ session, onLogout }) {
     try {
       setLoadingNotifications(true);
       const response = await api.get('/api/jira/notifications?status=unread');
-      setNotifications(response.data ?? []);
-      if (response.data && response.data.length > 0) {
+      const unread = Array.isArray(response.data) ? response.data : [];
+      setNotifications(unread);
+      if (unread.length > 0) {
         setShowNotificationsModal(true);
       }
     } catch (error) {
@@ -89,7 +112,7 @@ function JiraDashboard({ session, onLogout }) {
     try {
       setLoading(true);
       const response = await api.get('/api/jira/projects');
-      setProjects(response.data ?? []);
+      setProjects(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
       console.error('Error fetching projects:', error);
     } finally {
@@ -103,7 +126,7 @@ function JiraDashboard({ session, onLogout }) {
       const response = await api.get('/api/jira/issues', {
         params: { project_id: selectedProject.id },
       });
-      setAllIssues(response.data ?? []);
+      setAllIssues(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
       console.error('Error fetching issues:', error);
     }
@@ -113,7 +136,7 @@ function JiraDashboard({ session, onLogout }) {
     try {
       setLoadingAllNotifications(true);
       const response = await api.get('/api/jira/notifications?status=all');
-      setAllNotifications(response.data ?? []);
+      setAllNotifications(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
       console.error('Error fetching all notifications:', error);
     } finally {
@@ -214,6 +237,7 @@ function JiraDashboard({ session, onLogout }) {
 
   const hasProjectSelected = Boolean(selectedProject);
   const allowCreateProject = canUserCreateProject(userRole);
+  const allowDeleteProject = canManageProjectMembers(userRole);
 
   const handleNavViewChange = (view) => {
     setMainView(view);
@@ -250,6 +274,8 @@ function JiraDashboard({ session, onLogout }) {
       <main className="dashboard-main">
         {mainView === DASHBOARD_VIEWS.USER_MANAGEMENT ? (
           <UserManagement session={session} />
+        ) : mainView === DASHBOARD_VIEWS.ROLES ? (
+          <RolesManagement userRole={userRole} />
         ) : mainView === DASHBOARD_VIEWS.NOTIFICATIONS ? (
           <div className="dashboard-main-content">
             <div className="notifications-page-header">
@@ -299,7 +325,7 @@ function JiraDashboard({ session, onLogout }) {
             )}
           </div>
         ) : hasProjectSelected && mainView === DASHBOARD_VIEWS.CALENDAR ? (
-          <div className="dashboard-main-content">
+          <div className="dashboard-main-content dashboard-main-content--calendar">
             <CalendarView project={selectedProject} issues={allIssues} />
           </div>
         ) : hasProjectSelected && mainView === DASHBOARD_VIEWS.WORK_ITEMS ? (
@@ -329,6 +355,7 @@ function JiraDashboard({ session, onLogout }) {
           <TaskBoardView
             project={selectedProject}
             session={session}
+            userRole={userRole}
             onBackToProjects={handleBackToProjects}
             onIssueClick={(issue) => {
               setSelectedIssue(issue);
@@ -344,7 +371,7 @@ function JiraDashboard({ session, onLogout }) {
           <ProjectsView
             projects={projects}
             onSelectProject={handleSelectProject}
-            onDeleteProject={handleDeleteProject}
+            onDeleteProject={allowDeleteProject ? handleDeleteProject : undefined}
             onCreateProjectClick={() => setShowProjectForm(true)}
             title="Project updates"
             showCreateButton={false}
@@ -353,7 +380,7 @@ function JiraDashboard({ session, onLogout }) {
           <ProjectsView
             projects={projects}
             onSelectProject={handleSelectProject}
-            onDeleteProject={handleDeleteProject}
+            onDeleteProject={allowDeleteProject ? handleDeleteProject : undefined}
             onCreateProjectClick={() => setShowProjectForm(true)}
             title="Projects"
             showCreateButton={allowCreateProject}
@@ -385,7 +412,9 @@ function JiraDashboard({ session, onLogout }) {
             setSelectedIssue(updatedIssue);
             setRefreshKey((k) => k + 1);
           }}
-          onAddSubtask={selectedProject ? handleAddSubtask : undefined}
+          onAddSubtask={
+            selectedProject && canCreateIssues(userRole) ? handleAddSubtask : undefined
+          }
           userRole={userRole}
         />
       )}

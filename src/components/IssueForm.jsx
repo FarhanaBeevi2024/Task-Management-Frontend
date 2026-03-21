@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../services/api';
+import { useAccessConfig } from '../context/AccessConfigContext.jsx';
 import './IssueForm.css';
 
 const IssueForm = ({ project, issue, parentIssue, session, onSubmit, onCancel, userRole, issues = [] }) => {
+  const { canAssignIssuesToOthers } = useAccessConfig();
   const [issueTypes, setIssueTypes] = useState([]);
   const [releases, setReleases] = useState([]);
   const [milestones, setMilestones] = useState([]);
@@ -57,9 +59,10 @@ const IssueForm = ({ project, issue, parentIssue, session, onSubmit, onCancel, u
   const fetchIssueTypes = async () => {
     try {
       const response = await api.get('/api/jira/issue-types');
-      setIssueTypes(response.data);
-      if (response.data.length > 0 && !issue) {
-        setIssueTypeId(response.data[0].id);
+      const types = Array.isArray(response.data) ? response.data : [];
+      setIssueTypes(types);
+      if (types.length > 0 && !issue) {
+        setIssueTypeId(types[0].id);
       }
     } catch (error) {
       console.error('Error fetching issue types:', error);
@@ -72,7 +75,7 @@ const IssueForm = ({ project, issue, parentIssue, session, onSubmit, onCancel, u
       const response = await api.get('/api/jira/releases', {
         params: { project_id: project.id, is_active: true },
       });
-      setReleases(response.data);
+      setReleases(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
       console.error('Error fetching releases:', error);
     }
@@ -117,10 +120,11 @@ const IssueForm = ({ project, issue, parentIssue, session, onSubmit, onCancel, u
     });
   };
 
-  const parentIssueOptions = issues.filter(i => i.id !== issue?.id && !i.parent_issue_id);
+  const parentIssueOptions = (Array.isArray(issues) ? issues : []).filter(
+    (i) => i.id !== issue?.id && !i.parent_issue_id
+  );
   const isSubtaskForm = Boolean(parentIssue);
-  const isTeamLeader = userRole === 'team_leader';
-  const canAssign = isTeamLeader;
+  const canAssign = canAssignIssuesToOthers(userRole ?? 'user');
   // Fetch team members when canAssign - need session for dependency
   useEffect(() => {
     if (canAssign && session) fetchTeamMembers();

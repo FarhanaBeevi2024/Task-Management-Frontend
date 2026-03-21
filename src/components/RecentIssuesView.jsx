@@ -5,7 +5,7 @@ import './RecentIssuesView.css';
  * Recent issues list view: header and list of issues across all projects.
  * Clicking an issue invokes onIssueClick(issue).
  */
-function RecentIssuesView({ issues, onIssueClick }) {
+function RecentIssuesView({ issues = [], onIssueClick }) {
   const formatKey = (issue) =>
     issue.issue_key || (issue.project?.key && issue.id ? `${issue.project.key}-${issue.id.slice(0, 8)}` : '—');
 

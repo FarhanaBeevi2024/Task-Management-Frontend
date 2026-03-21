@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../services/api';
-import { canManageMilestones } from '../config/accessConfig.js';
+import { useAccessConfig } from '../context/AccessConfigContext.jsx';
 import './MilestonesView.css';
 
 const STATUS_OPTIONS = [
@@ -10,6 +10,7 @@ const STATUS_OPTIONS = [
 ];
 
 function MilestonesView({ project, session, userRole }) {
+  const { canManageMilestones } = useAccessConfig();
   const [milestones, setMilestones] = useState([]);
   const [issues, setIssues] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -40,8 +41,8 @@ function MilestonesView({ project, session, userRole }) {
           params: { project_id: project.id },
         }),
       ]);
-      setMilestones(milestonesRes.data ?? []);
-      setIssues(issuesRes.data ?? []);
+      setMilestones(Array.isArray(milestonesRes.data) ? milestonesRes.data : []);
+      setIssues(Array.isArray(issuesRes.data) ? issuesRes.data : []);
     } catch (err) {
       console.error('Error fetching milestones:', err);
       setError(err.response?.data?.error || 'Failed to load milestones');
@@ -171,7 +172,9 @@ function MilestonesView({ project, session, userRole }) {
                   {m.planned_date && (
                     <span className="milestone-planned">Planned: {new Date(m.planned_date).toLocaleDateString()}</span>
                   )}
-                  {m.description && <span className="milestone-desc">{m.description}</span>}
+                  {m.description && (
+                    <span className="milestone-desc">{m.description}</span>
+                  )}
                 </div>
                 <div className="milestone-progress-wrap">
                   <div className="milestone-progress-bar">

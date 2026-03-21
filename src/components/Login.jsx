@@ -85,7 +85,7 @@ const Login = ({ onLogin }) => {
             </>
           ) : (
             <>
-              Don't have an account?{' '}
+              Don&apos;t have an account?{' '}
               <button onClick={() => setIsSignUp(true)} className="link-btn">
                 Sign Up
               </button>

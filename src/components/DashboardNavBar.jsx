@@ -1,5 +1,5 @@
 import React from 'react';
-import { canManageUsers } from '../config/accessConfig.js';
+import { useAccessConfig } from '../context/AccessConfigContext.jsx';
 import './DashboardNavBar.css';
 
 const VIEWS = {
@@ -11,6 +11,8 @@ const VIEWS = {
   MILESTONES: 'milestones',
   NOTIFICATIONS: 'notifications',
   USER_MANAGEMENT: 'user-management',
+  ROLES: 'roles',
+  PROJECT_UPDATES: 'project-updates',
 };
 
 /**
@@ -18,9 +20,10 @@ const VIEWS = {
  * When no project: Projects, Recent issues, etc.
  */
 function DashboardNavBar({ currentUser, mainView, onViewChange, onLogout, userRole, selectedProject, onBackToProjects, projectRole, notificationsCount = 0 }) {
-  const isClient = userRole === 'client' || userRole === 'representative';
+  const { canManageUsers, canShowMilestonesNav } = useAccessConfig();
   const isProjectRoleClient = projectRole === 'client';
   const showUserManagement = canManageUsers(userRole);
+  const showRoles = canManageUsers(userRole);
   const displayName = currentUser?.email?.split('@')[0] || 'User';
   const initial = currentUser?.email?.charAt(0).toUpperCase() || 'U';
 
@@ -104,14 +107,16 @@ function DashboardNavBar({ currentUser, mainView, onViewChange, onLogout, userRo
                   <span>Work items</span>
                 </button>
               )}
-              <button
-                type="button"
-                className={`menu-item ${mainView === VIEWS.MILESTONES ? 'active' : ''}`}
-                onClick={() => handleNavClick(VIEWS.MILESTONES)}
-              >
-                <span className="menu-icon">🏁</span>
-                <span>Milestones</span>
-              </button>
+              {canShowMilestonesNav(userRole, projectRole) && (
+                <button
+                  type="button"
+                  className={`menu-item ${mainView === VIEWS.MILESTONES ? 'active' : ''}`}
+                  onClick={() => handleNavClick(VIEWS.MILESTONES)}
+                >
+                  <span className="menu-icon">🏁</span>
+                  <span>Milestones</span>
+                </button>
+              )}
             </>
           )}
         </div>
@@ -139,6 +144,16 @@ function DashboardNavBar({ currentUser, mainView, onViewChange, onLogout, userRo
             >
               <span className="menu-icon">⚙️</span>
               <span>Users</span>
+            </button>
+          )}
+          {showRoles && (
+            <button
+              type="button"
+              className={`menu-item ${mainView === VIEWS.ROLES ? 'active' : ''}`}
+              onClick={() => handleNavClick(VIEWS.ROLES)}
+            >
+              <span className="menu-icon">🛡️</span>
+              <span>Access Control</span>
             </button>
           )}
         </div>

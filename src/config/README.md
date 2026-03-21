@@ -1,24 +1,28 @@
-# Access configuration
+# Config
 
-Access is controlled by **`accessConfig.json`** in this folder.
+## Role access (permissions)
 
-- **Backend** uses its own copy: `backend/accessConfig.json` (keep both in sync when editing).
-- **Frontend** uses this file for UI (who sees "Create Project", "User management", etc.).
+Global and project permissions for each **user role** (`superadmin`, `admin`, `team_leader`, etc.) are stored in the database table **`role_access_config`**.
 
-## Structure
+- **Admin UI:** Jira dashboard sidebar → **Access Control** (below **Users**). Users need the **Manage users** permission (`canManageUsers`) to open it.
+- **API:** `GET /api/access-config` (authenticated), `PUT /api/admin/role-access` (same permission as user management).
+- **Migration:** Run `database/role_access_config.sql` in the Supabase SQL Editor once.
+- **Fallback:** If the table is missing or empty, the backend uses built-in defaults from `backend/roleAccessStore.js` and logs a warning.
 
-Under `roles`, each role has:
+The React app loads permissions via **`AccessConfigProvider`** (`frontend/src/context/AccessConfigContext.jsx`).
 
-- **`global`** – app-wide permissions:
-  - `canManageUsers` – User management screen and changing other users’ roles
-  - `canViewAllUsers` – List all users (e.g. for task assignment)
-  - `canCreateProjects` – Create new projects
-  - `canViewAllProjects` – See all projects (otherwise only projects they’re in via `project_members`)
+### Where each flag is enforced (summary)
 
-- **`project`** – per-project permissions (used by backend):
-  - `autoMemberOnCreate` – When this role creates a project, add them as a project member
-  - `canManageMembers` – Add/remove project members
-  - `canCreateIssues` – Create issues in a project
-  - `canAssignIssuesToOthers` – Assign issues to other users
+| Flag | Backend | Frontend (UX) |
+|------|---------|-----------------|
+| **canManageUsers** | `PUT /api/admin/users/*`, `PUT /api/admin/role-access` | Users + Access Control menus |
+| **canViewAllUsers** | `GET /api/users` (org list: with **canManageUsers** or **canViewAllUsers**; superadmin “all profiles” branch still requires **canViewAllUsers**) | User lists / assignee dropdowns only load if API allows |
+| **canCreateProjects** | `POST /api/jira/projects` | Create Project button |
+| **canViewAllProjects** | `GET /api/jira/projects` (all org projects vs member-only); `GET /api/jira/projects/:id`; issues/sprints/milestones use **project access** | Project list from API |
+| **autoMemberOnCreate** | `POST /api/jira/projects` (add creator to `project_members`) | — |
+| **canManageMembers** | `PUT /api/jira/projects/:id`, member POST/DELETE, `DELETE /api/jira/projects/:id`; `GET /api/jira/projects/:id/members` (member **or** this flag) | Project Overview members; project delete on cards |
+| **canCreateIssues** | `POST /api/jira/issues` (+ project access) | Board FAB; subtasks |
+| **canAssignIssuesToOthers** | `POST /api/jira/issues` (assignee); `PUT /api/jira/issues/:id` (power roles) | Board assignee select; Issue detail “Assign to” |
+| **canManageMilestones** | Milestone POST/PUT/DELETE | Milestones page; Issue detail milestone picker |
 
-Set any value to `true` or `false`. Unknown roles fall back to `user`. After editing JSON, restart backend and refresh the frontend.
+**Project access:** For a given `project_id`, the user must be in **`project_members`** **or** have **canViewAllProjects** (same org). Applied to listing/fetching issues, creating issues, sprints, milestones, and single-issue reads/updates.

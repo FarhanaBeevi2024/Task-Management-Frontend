@@ -1,0 +1,142 @@
+.roles-management {
+  padding: 1.5rem 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.roles-management--denied {
+  color: #6b7280;
+}
+
+.roles-management-header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.roles-management-subtitle {
+  color: #6b7280;
+  font-size: 0.95rem;
+  max-width: 52rem;
+  margin: 0.35rem 0 0 0;
+  line-height: 1.5;
+}
+
+.roles-management-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.roles-management-btn {
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  color: #374151;
+}
+
+.roles-management-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.roles-management-btn.primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+  border-color: transparent;
+}
+
+.roles-management-btn.secondary:hover:not(:disabled) {
+  background: #f9fafb;
+}
+
+.roles-management-muted {
+  color: #6b7280;
+}
+
+.roles-management-error {
+  color: #b91c1c;
+}
+
+.roles-management-banner {
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
+
+.roles-management-banner--success {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.roles-management-banner--error {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.roles-management-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1.25rem;
+}
+
+.roles-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 1.25rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.roles-card-title {
+  margin: 0 0 0.25rem 0;
+  font-size: 1.1rem;
+  color: #111827;
+}
+
+.roles-card-key {
+  margin: 0 0 1rem 0;
+  font-size: 0.8rem;
+  color: #9ca3af;
+}
+
+.roles-section-title {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #6b7280;
+}
+
+.roles-perm-list {
+  list-style: none;
+  margin: 0 0 1.25rem 0;
+  padding: 0;
+}
+
+.roles-perm-list:last-child {
+  margin-bottom: 0;
+}
+
+.roles-perm-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  font-size: 0.875rem;
+  color: #374151;
+  cursor: pointer;
+  line-height: 1.4;
+  padding: 0.35rem 0;
+}
+
+.roles-perm-row input {
+  margin-top: 0.2rem;
+  flex-shrink: 0;
+}

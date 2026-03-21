@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import JiraDashboard from './JiraDashboard.jsx';
 import SuperAdminDashboard from './SuperAdminDashboard.jsx';
+import { AccessConfigProvider } from '../context/AccessConfigContext.jsx';
 import { api } from '../services/api';
 
 function AuthenticatedHome({ session, onLogout }) {
@@ -30,7 +31,11 @@ function AuthenticatedHome({ session, onLogout }) {
     return <SuperAdminDashboard onLogout={onLogout} />;
   }
 
-  return <JiraDashboard session={session} onLogout={onLogout} />;
+  return (
+    <AccessConfigProvider session={session}>
+      <JiraDashboard session={session} onLogout={onLogout} />
+    </AccessConfigProvider>
+  );
 }
 
 export default AuthenticatedHome;

@@ -199,7 +199,7 @@ const Dashboard = ({ session, onLogout }) => {
         <header className="top-header">
           <div className="header-left">
             <h1 className="page-title">Dashboard</h1>
-            <p className="page-subtitle">Welcome back! Here's what's happening today.</p>
+            <p className="page-subtitle">Welcome back! Here&apos;s what&apos;s happening today.</p>
           </div>
           <div className="header-right">
             <div className="view-toggle">

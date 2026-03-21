@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../services/api';
+import { useAccessConfig } from '../context/AccessConfigContext.jsx';
 import './ProjectOverview.css';
 
 const PROJECT_ROLES = [
@@ -12,6 +13,7 @@ const PROJECT_ROLES = [
 ];
 
 function ProjectOverview({ project, session, userRole }) {
+  const { canManageProjectMembers } = useAccessConfig();
   const [localProject, setLocalProject] = useState(project);
   const [editing, setEditing] = useState(false);
   const [savingProject, setSavingProject] = useState(false);
@@ -23,8 +25,7 @@ function ProjectOverview({ project, session, userRole }) {
   const [selectedUserId, setSelectedUserId] = useState('');
   const [selectedProjectRole, setSelectedProjectRole] = useState('team_member');
 
-  const canManageMembers =
-    userRole === 'superadmin' || userRole === 'admin';
+  const canManageMembers = canManageProjectMembers(userRole);
 
   useEffect(() => {
     setLocalProject(project);
@@ -45,7 +46,7 @@ function ProjectOverview({ project, session, userRole }) {
       setLoadingMembers(true);
       setError('');
       const response = await api.get(`/api/jira/projects/${project.id}/members`);
-      setMembers(response.data || []);
+      setMembers(Array.isArray(response.data) ? response.data : []);
     } catch (err) {
       console.error('Error fetching project members:', err);
       setError(err.response?.data?.error || 'Failed to load project members');
@@ -58,7 +59,7 @@ function ProjectOverview({ project, session, userRole }) {
     try {
       setLoadingUsers(true);
       const response = await api.get('/api/users');
-      setUsers(response.data || []);
+      setUsers(Array.isArray(response.data) ? response.data : []);
     } catch (err) {
       console.error('Error fetching users:', err);
     } finally {

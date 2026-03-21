@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../services/api';
 import JiraBoard from '../pages/JiraBoard.jsx';
+import { useAccessConfig } from '../context/AccessConfigContext.jsx';
 import './TaskBoardView.css';
 
 /**
  * Board page when a project is selected: header with back link and the issue board.
  * Clients (project_role === 'client') see TO DO (only tasks they created), IN PROGRESS, and COMPLETED.
+ * (Other nav visibility is driven by database-backed role access + project role.)
  */
 function TaskBoardView({
   project,
@@ -14,7 +16,11 @@ function TaskBoardView({
   onIssueClick,
   onCreateIssueClick,
   boardRefreshKey = 0,
+  userRole,
 }) {
+  const { canCreateIssues } = useAccessConfig();
+  const showCreateFab = Boolean(userRole && canCreateIssues(userRole));
+
   const roleFromProject = project?.current_user_project_role ?? null;
   const [fetchedRole, setFetchedRole] = useState(null);
 
@@ -47,20 +53,23 @@ function TaskBoardView({
           key={boardRefreshKey}
           project={project}
           session={session}
+          userRole={userRole}
           onIssueClick={onIssueClick}
           projectRole={projectRole}
         />
       </div>
 
-      <button
-        type="button"
-        className="create-issue-fab"
-        onClick={onCreateIssueClick}
-        title="Create issue"
-        aria-label="Create issue"
-      >
-        +
-      </button>
+      {showCreateFab && (
+        <button
+          type="button"
+          className="create-issue-fab"
+          onClick={onCreateIssueClick}
+          title="Create issue"
+          aria-label="Create issue"
+        >
+          +
+        </button>
+      )}
     </>
   );
 }

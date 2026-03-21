@@ -27,7 +27,7 @@ function UserManagement({ session }) {
       setLoading(true);
       setError('');
       const response = await api.get('/api/users');
-      setUsers(response.data || []);
+      setUsers(Array.isArray(response.data) ? response.data : []);
     } catch (err) {
       console.error('Error fetching users:', err);
       setError(err.response?.data?.error || 'Failed to load users');

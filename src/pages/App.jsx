@@ -10,11 +10,19 @@ function App() {
 
   useEffect(() => {
     // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setApiAccessToken(session?.access_token || null);
-      setLoading(false);
-    });
+    supabase.auth
+      .getSession()
+      .then(({ data: { session } }) => {
+        setSession(session);
+        setApiAccessToken(session?.access_token || null);
+      })
+      .catch(() => {
+        setSession(null);
+        setApiAccessToken(null);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
 
     // Listen for auth changes
     const {

@@ -86,12 +86,15 @@ function CalendarView({ project, issues }) {
         </div>
       </div>
 
-      <div className="calendar-grid">
-        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((d) => (
-          <div key={d} className="calendar-weekday">
-            {d}
-          </div>
-        ))}
+      <div className="calendar-grid-wrap">
+        <div className="calendar-weekdays">
+          {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((d) => (
+            <div key={d} className="calendar-weekday">
+              {d}
+            </div>
+          ))}
+        </div>
+        <div className="calendar-grid">
         {days.map((day, index) => {
           if (!day) {
             return <div key={`blank-${index}`} className="calendar-day blank" />;
@@ -134,6 +137,7 @@ function CalendarView({ project, issues }) {
             </div>
           );
         })}
+        </div>
       </div>
     </div>
   );

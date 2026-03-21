@@ -22,6 +22,16 @@
   overflow: auto;
 }
 
+/* Calendar: use full main area (width + height) */
+.dashboard-main-content--calendar {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 1rem 1.25rem 1.25rem;
+  overflow: hidden;
+}
+
 .notifications-page-header {
   display: flex;
   justify-content: space-between;

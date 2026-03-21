@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../services/api';
+import { getAssigneeInitialsFromEmail } from '../utils/assigneeInitials.js';
+import { useAccessConfig } from '../context/AccessConfigContext.jsx';
 import './IssueDetail.css';
 
 const statusOptions = [
@@ -18,6 +20,9 @@ const priorityOptions = [
 ];
 
 const IssueDetail = ({ issue, session, onClose, onEdit, onUpdate, onAddSubtask, userRole }) => {
+  const { canAssignIssuesToOthers, canManageMilestones } = useAccessConfig();
+  const canAssignOthers = canAssignIssuesToOthers(userRole ?? 'user');
+  const canPickMilestone = canManageMilestones(userRole ?? 'user');
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState('');
   const [loading, setLoading] = useState(true);
@@ -62,15 +67,13 @@ const IssueDetail = ({ issue, session, onClose, onEdit, onUpdate, onAddSubtask, 
     }
   }, [issue]);
 
-  const canAssign = userRole === 'team_leader';
-
   useEffect(() => {
-    if (canAssign && session) {
+    if (canAssignOthers && session) {
       api.get('/api/users').then((res) => {
         setTeamMembers(Array.isArray(res.data) ? res.data : []);
       }).catch((err) => console.error('Error fetching team members:', err));
     }
-  }, [canAssign, session]);
+  }, [canAssignOthers, session]);
 
   useEffect(() => {
     if (issue?.project?.id && session) {
@@ -104,7 +107,7 @@ const IssueDetail = ({ issue, session, onClose, onEdit, onUpdate, onAddSubtask, 
     try {
       setLoading(true);
       const response = await api.get(`/api/jira/issues/${issue.id}/comments`);
-      setComments(response.data);
+      setComments(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
       console.error('Error fetching comments:', error);
     } finally {
@@ -361,7 +364,7 @@ const IssueDetail = ({ issue, session, onClose, onEdit, onUpdate, onAddSubtask, 
                 placeholder="comma-separated labels"
               />
             </div>
-            {canAssign && milestones.length > 0 ? (
+            {canPickMilestone && milestones.length > 0 ? (
               <div className="meta-item">
                 <span className="meta-label">Milestone:</span>
                 <select
@@ -376,13 +379,13 @@ const IssueDetail = ({ issue, session, onClose, onEdit, onUpdate, onAddSubtask, 
                   ))}
                 </select>
               </div>
-            ) : issue?.milestone && !canAssign ? (
+            ) : issue?.milestone && !canPickMilestone ? (
               <div className="meta-item">
                 <span className="meta-label">Milestone:</span>
                 <span className="meta-value">{issue.milestone.version}</span>
               </div>
             ) : null}
-            {canAssign ? (
+            {canAssignOthers ? (
               <div className="meta-item">
                 <span className="meta-label">Assign To:</span>
                 <select
@@ -404,9 +407,9 @@ const IssueDetail = ({ issue, session, onClose, onEdit, onUpdate, onAddSubtask, 
                 <span className="meta-label">Assigned to:</span>
                 <div className="assignees-list">
                   <div className="assignee-avatar-small">
-                    {issue.assignee.email?.charAt(0).toUpperCase() || '?'}
+                    {getAssigneeInitialsFromEmail(issue.assignee?.email)}
                   </div>
-                  <span className="meta-value">{issue.assignee.email}</span>
+                  <span className="meta-value">{issue.assignee?.email ?? '—'}</span>
                 </div>
               </div>
             )}
@@ -488,8 +491,8 @@ const IssueDetail = ({ issue, session, onClose, onEdit, onUpdate, onAddSubtask, 
 
             {activeTab === 'comments' && (
               <div className="comments-section">
-                <h4>Comments ({comments.length})</h4>
-                {comments.map(comment => (
+                <h4>Comments ({Array.isArray(comments) ? comments.length : 0})</h4>
+                {(Array.isArray(comments) ? comments : []).map((comment) => (
                   <div key={comment.id} className="comment-item">
                     <div className="comment-avatar">
                       {comment.author?.email?.charAt(0).toUpperCase() || 'U'}

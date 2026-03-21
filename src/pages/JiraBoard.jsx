@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { api } from '../services/api';
 import * as XLSX from 'xlsx';
 import IssueCard from '../components/IssueCard.jsx';
+import { useAccessConfig } from '../context/AccessConfigContext.jsx';
 import './JiraBoard.css';
 
 const STATUS_LABELS = {
@@ -11,7 +12,8 @@ const STATUS_LABELS = {
   done: 'Completed'
 };
 
-const JiraBoard = ({ project, session, onIssueClick, projectRole }) => {
+const JiraBoard = ({ project, session, onIssueClick, projectRole, userRole }) => {
+  const { canAssignIssuesToOthers } = useAccessConfig();
   const [issues, setIssues] = useState([]);
   const [loading, setLoading] = useState(true);
   const [sprint, setSprint] = useState(null);
@@ -77,9 +79,10 @@ const JiraBoard = ({ project, session, onIssueClick, projectRole }) => {
       const response = await api.get('/api/jira/issues', {
         params,
       });
-      setIssues(response.data);
+      setIssues(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
       console.error('Error fetching issues:', error);
+      setIssues([]);
     } finally {
       setLoading(false);
     }
@@ -90,7 +93,7 @@ const JiraBoard = ({ project, session, onIssueClick, projectRole }) => {
       const response = await api.get('/api/jira/sprints', {
         params: { project_id: project.id, state: 'active' },
       });
-      if (response.data.length > 0) {
+      if (Array.isArray(response.data) && response.data.length > 0) {
         setSprint(response.data[0]);
       }
     } catch (error) {
@@ -116,7 +119,7 @@ const JiraBoard = ({ project, session, onIssueClick, projectRole }) => {
     if (!project?.id) return;
     try {
       const response = await api.get(`/api/jira/projects/${project.id}/milestones`);
-      setMilestones(response.data ?? []);
+      setMilestones(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
       console.error('Error fetching milestones:', error);
       setMilestones([]);
@@ -272,7 +275,13 @@ const JiraBoard = ({ project, session, onIssueClick, projectRole }) => {
                     issue={issue}
                     onClick={() => onIssueClick && onIssueClick(issue)}
                     users={users}
-                    onAssign={canAssignTasks ? handleAssign : null}
+                    onAssign={
+                      canAssignTasks &&
+                      userRole &&
+                      canAssignIssuesToOthers(userRole)
+                        ? handleAssign
+                        : null
+                    }
                     onDragStart={handleDragStart}
                   />
                 ))}

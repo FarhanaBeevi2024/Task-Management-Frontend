@@ -1,4 +1,5 @@
 import React from 'react';
+import { getAssigneeInitialsFromEmail } from '../utils/assigneeInitials.js';
 import './IssueCard.css';
 
 const IssueCard = ({ issue, onClick, onStatusChange, users = [], onAssign, onDragStart }) => {
@@ -32,9 +33,7 @@ const IssueCard = ({ issue, onClick, onStatusChange, users = [], onAssign, onDra
   const currentUser =
     users.find((u) => u.user_id === assigneeValue) || null;
   const assigneeEmail = currentUser?.email || issue.assignee?.email || '';
-  const assigneeInitial = assigneeEmail
-    ? assigneeEmail.charAt(0).toUpperCase()
-    : '?';
+  const assigneeInitial = getAssigneeInitialsFromEmail(assigneeEmail);
 
   const creatorId = issue.created_by || issue.reporter_id;
   const createdByClient =
