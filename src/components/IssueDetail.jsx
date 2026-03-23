@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { api } from '../services/api';
 import { getAssigneeInitialsFromEmail } from '../utils/assigneeInitials.js';
 import { useAccessConfig } from '../context/AccessConfigContext.jsx';
+import WorkflowStatusSelect from './WorkflowStatusSelect.jsx';
+import { normalizeWorkflowStatus } from '../constants/workflowStatus.js';
 import './IssueDetail.css';
 
 const statusOptions = [
@@ -44,8 +46,11 @@ const IssueDetail = ({ issue, session, onClose, onEdit, onUpdate, onAddSubtask, 
   const [assigneeId, setAssigneeId] = useState('');
   const [milestoneId, setMilestoneId] = useState('');
   const [exposedToClient, setExposedToClient] = useState(false);
+  const [workflowStatus, setWorkflowStatus] = useState('');
   const [teamMembers, setTeamMembers] = useState([]);
   const [milestones, setMilestones] = useState([]);
+
+  const isClientUser = userRole === 'client';
 
   useEffect(() => {
     if (issue) {
@@ -64,6 +69,7 @@ const IssueDetail = ({ issue, session, onClose, onEdit, onUpdate, onAddSubtask, 
       setAssigneeId(issue.assignee_id || '');
       setMilestoneId(issue.milestone_id || '');
       setExposedToClient(issue.exposed_to_client === true);
+      setWorkflowStatus(normalizeWorkflowStatus(issue.workflow_status));
     }
   }, [issue]);
 
@@ -133,7 +139,8 @@ const IssueDetail = ({ issue, session, onClose, onEdit, onUpdate, onAddSubtask, 
           actual_days: actualDays === '' ? null : parseInt(actualDays, 10),
           assignee_id: assigneeId || null,
           milestone_id: milestoneId || null,
-          exposed_to_client: exposedToClient
+          exposed_to_client: exposedToClient,
+          ...(isClientUser ? {} : { workflow_status: workflowStatus }),
         }
       );
       if (onUpdate) onUpdate(response.data);
@@ -167,6 +174,11 @@ const IssueDetail = ({ issue, session, onClose, onEdit, onUpdate, onAddSubtask, 
         return `${name} updated summary`;
       case 'DESCRIPTION_CHANGE':
         return `${name} updated description`;
+      case 'UPDATE':
+        if (log.field_name === 'workflow_status') {
+          return `${name} changed workflow status from '${fmt(log.old_value)}' to '${fmt(log.new_value)}'`;
+        }
+        return `${name} updated ${log.field_name || 'field'} from '${fmt(log.old_value)}' to '${fmt(log.new_value)}'`;
       case 'COMMENT_ADDED':
         return `${name} added a comment`;
       case 'DELETE':
@@ -274,6 +286,17 @@ const IssueDetail = ({ issue, session, onClose, onEdit, onUpdate, onAddSubtask, 
                   <option key={opt.value} value={opt.value}>{opt.label}</option>
                 ))}
               </select>
+            </div>
+            <div className="meta-item meta-item--workflow-status">
+              <span className="meta-label">Workflow status:</span>
+              <WorkflowStatusSelect
+                value={workflowStatus}
+                onChange={setWorkflowStatus}
+                readOnly={isClientUser}
+                showBadge
+                className="detail-workflow-status-field"
+                selectClassName="detail-select"
+              />
             </div>
             <div className="meta-item">
               <span className="meta-label">Internal Priority:</span>

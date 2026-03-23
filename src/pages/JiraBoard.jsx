@@ -182,6 +182,7 @@ const JiraBoard = ({ project, session, onIssueClick, projectRole, userRole }) =>
       Summary: issue.summary,
       Description: issue.description,
       Status: STATUS_LABELS[issue.status] || issue.status,
+      'Workflow Status': issue.workflow_status || '',
       'Internal Priority': issue.internal_priority || '',
       'Client Priority': issue.client_priority || '',
       Assignee: issue.assignee?.email || '',
@@ -324,6 +325,7 @@ const JiraBoard = ({ project, session, onIssueClick, projectRole, userRole }) =>
                     <th>Summary</th>
                     <th>Description</th>
                     <th>Status</th>
+                    <th>Workflow Status</th>
                     <th>Internal Priority</th>
                     <th>Client Priority</th>
                     <th>Assignee</th>
@@ -340,6 +342,7 @@ const JiraBoard = ({ project, session, onIssueClick, projectRole, userRole }) =>
                       <td>{issue.summary}</td>
                       <td>{issue.description}</td>
                       <td>{STATUS_LABELS[issue.status] || issue.status}</td>
+                      <td>{issue.workflow_status || ''}</td>
                       <td>{issue.internal_priority || ''}</td>
                       <td>{issue.client_priority || ''}</td>
                       <td>{issue.assignee?.email || ''}</td>
@@ -351,7 +354,7 @@ const JiraBoard = ({ project, session, onIssueClick, projectRole, userRole }) =>
                   ))}
                   {filteredIssues.length === 0 && (
                     <tr>
-                      <td colSpan={11} style={{ textAlign: 'center', padding: '1rem', color: '#6b7280' }}>
+                      <td colSpan={12} style={{ textAlign: 'center', padding: '1rem', color: '#6b7280' }}>
                         No tasks match the current filters.
                       </td>
                     </tr>

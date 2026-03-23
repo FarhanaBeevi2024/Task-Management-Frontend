@@ -62,6 +62,15 @@
   font-weight: 600;
 }
 
+.issue-workflow-row {
+  margin-bottom: 0.5rem;
+}
+
+.issue-workflow-badge {
+  display: inline-block;
+  max-width: 100%;
+}
+
 .issue-summary {
   font-size: 0.95rem;
   font-weight: 600;

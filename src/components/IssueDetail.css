@@ -282,6 +282,19 @@
   align-items: center;
   flex-wrap: wrap;
 }
+
+.meta-item--workflow-status {
+  align-items: flex-start;
+}
+
+.detail-workflow-status-field {
+  flex: 1;
+  min-width: min(100%, 280px);
+}
+
+.detail-workflow-status-field .workflow-status-select {
+  min-width: 200px;
+}
 .detail-meta-editable .detail-input {
   flex: 1;
   min-width: 120px;

@@ -1,0 +1,95 @@
+.workflow-status-field {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.workflow-status-field.workflow-status-field--compact {
+  gap: 0.25rem;
+}
+
+.workflow-status-select {
+  flex: 1;
+  min-width: 0;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #1f2937;
+  background: #fff;
+  cursor: pointer;
+}
+
+.workflow-status-select:disabled {
+  cursor: default;
+  opacity: 0.85;
+  background: #f9fafb;
+}
+
+.workflow-status-field--compact .workflow-status-select {
+  padding: 0.2rem 0.35rem;
+  font-size: 0.68rem;
+  border-radius: 4px;
+  max-width: 100%;
+}
+
+.workflow-status-field--compact .workflow-status-badge,
+.workflow-status-badge.workflow-status-badge--compact {
+  font-size: 0.6rem;
+  padding: 0.15rem 0.35rem;
+  max-width: 8rem;
+}
+
+.workflow-status-badge {
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 0.2rem 0.45rem;
+  border-radius: 4px;
+  white-space: nowrap;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.workflow-status-badge--dev {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.workflow-status-badge--dev-done {
+  background: #e0e7ff;
+  color: #4338ca;
+}
+
+.workflow-status-badge--uat-release {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.workflow-status-badge--uat {
+  background: #fde68a;
+  color: #92400e;
+}
+
+.workflow-status-badge--uat-done {
+  background: #d1fae5;
+  color: #047857;
+}
+
+.workflow-status-badge--prod {
+  background: #bbf7d0;
+  color: #166534;
+}
+
+.workflow-status-badge--clarify-internal {
+  background: #fce7f3;
+  color: #9d174d;
+}
+
+.workflow-status-badge--clarify-client {
+  background: #fed7aa;
+  color: #c2410c;
+}

@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../services/api';
 import { useAccessConfig } from '../context/AccessConfigContext.jsx';
+import WorkflowStatusSelect from './WorkflowStatusSelect.jsx';
+import {
+  DEFAULT_WORKFLOW_STATUS,
+  normalizeWorkflowStatus,
+} from '../constants/workflowStatus.js';
 import './IssueForm.css';
 
 const IssueForm = ({ project, issue, parentIssue, session, onSubmit, onCancel, userRole, issues = [] }) => {
@@ -22,7 +27,9 @@ const IssueForm = ({ project, issue, parentIssue, session, onSubmit, onCancel, u
   const [estimatedDays, setEstimatedDays] = useState('');
   const [actualDays, setActualDays] = useState('');
   const [exposedToClient, setExposedToClient] = useState(false);
+  const [workflowStatus, setWorkflowStatus] = useState(DEFAULT_WORKFLOW_STATUS);
   const [teamMembers, setTeamMembers] = useState([]);
+  const isClientUser = (userRole ?? '') === 'client';
 
   useEffect(() => {
     fetchIssueTypes();
@@ -51,8 +58,12 @@ const IssueForm = ({ project, issue, parentIssue, session, onSubmit, onCancel, u
       setEstimatedDays(issue.estimated_days ?? '');
       setActualDays(issue.actual_days ?? '');
       setExposedToClient(issue.exposed_to_client === true);
+      setWorkflowStatus(normalizeWorkflowStatus(issue.workflow_status));
     } else if (parentIssue) {
       setParentIssueId(parentIssue.id || '');
+      setWorkflowStatus(DEFAULT_WORKFLOW_STATUS);
+    } else {
+      setWorkflowStatus(DEFAULT_WORKFLOW_STATUS);
     }
   }, [issue, parentIssue, project]);
 
@@ -116,7 +127,8 @@ const IssueForm = ({ project, issue, parentIssue, session, onSubmit, onCancel, u
       labels: labels ? labels.split(',').map(l => l.trim()).filter(l => l) : [],
       estimated_days: estimatedDays === '' ? null : parseInt(estimatedDays, 10),
       actual_days: actualDays === '' ? null : parseInt(actualDays, 10),
-      exposed_to_client: exposedToClient
+      exposed_to_client: exposedToClient,
+      ...(isClientUser ? {} : { workflow_status: workflowStatus }),
     });
   };
 
@@ -194,6 +206,18 @@ const IssueForm = ({ project, issue, parentIssue, session, onSubmit, onCancel, u
               </select>
             </div>
           </div>
+
+          {!isClientUser && (
+            <div className="form-group">
+              <label>Workflow status</label>
+              <WorkflowStatusSelect
+                value={workflowStatus}
+                onChange={setWorkflowStatus}
+                showBadge
+                className="issue-form-workflow-field"
+              />
+            </div>
+          )}
 
           <div className="form-group">
             <label>Summary *</label>

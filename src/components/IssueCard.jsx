@@ -1,8 +1,16 @@
 import React from 'react';
 import { getAssigneeInitialsFromEmail } from '../utils/assigneeInitials.js';
+import WorkflowStatusSelect from './WorkflowStatusSelect.jsx';
 import './IssueCard.css';
 
-const IssueCard = ({ issue, onClick, onStatusChange, users = [], onAssign, onDragStart }) => {
+const IssueCard = ({
+  issue,
+  onClick,
+  onStatusChange,
+  users = [],
+  onAssign,
+  onDragStart,
+}) => {
   const issueType = issue.issue_type || {};
   const statusConfig = {
     to_do: { color: '#6b7280', bg: '#f3f4f6', label: 'To Do' },
@@ -67,6 +75,15 @@ const IssueCard = ({ issue, onClick, onStatusChange, users = [], onAssign, onDra
         {issue.story_points && (
           <div className="story-points">{issue.story_points} SP</div>
         )}
+      </div>
+      <div className="issue-workflow-row">
+        <WorkflowStatusSelect
+          value={issue.workflow_status}
+          badgeOnly
+          size="compact"
+          className="issue-workflow-badge"
+          aria-label={`Workflow status for ${issue.issue_key || 'task'}`}
+        />
       </div>
       <h4 className="issue-summary">{issue.summary}</h4>
       {issue.description && (
