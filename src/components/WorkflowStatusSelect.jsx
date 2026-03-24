@@ -1,6 +1,7 @@
 import React from 'react';
 import {
-  WORKFLOW_STATUSES,
+  getWorkflowOptionsForBoard,
+  isWorkflowStatusEditableForBoard,
   normalizeWorkflowStatus,
   getWorkflowStatusBadgeVariant,
 } from '../constants/workflowStatus.js';
@@ -18,6 +19,7 @@ import './WorkflowStatusSelect.css';
  *   size?: 'compact' | 'default';
  *   showBadge?: boolean;
  *   badgeOnly?: boolean; // true = badge only (Kanban cards)
+ *   boardStatus?: string; // issues.status — filters dropdown to In Progress / In Review workflow sets
  *   id?: string;
  *   'aria-label'?: string;
  * }} props
@@ -32,12 +34,17 @@ export default function WorkflowStatusSelect({
   size = 'default',
   showBadge = false,
   badgeOnly = false,
+  boardStatus,
   id,
   'aria-label': ariaLabel = 'Workflow status',
 }) {
-  const normalized = normalizeWorkflowStatus(value);
+  const editable = boardStatus == null || isWorkflowStatusEditableForBoard(boardStatus);
+  const options = editable
+    ? getWorkflowOptionsForBoard(boardStatus)
+    : [normalizeWorkflowStatus(value, boardStatus)];
+  const normalized = normalizeWorkflowStatus(value, boardStatus);
   const variant = getWorkflowStatusBadgeVariant(normalized);
-  const isLocked = disabled || readOnly;
+  const isLocked = disabled || readOnly || !editable;
   const sizeClass = size === 'compact' ? 'workflow-status-field--compact' : '';
 
   if (badgeOnly) {
@@ -75,7 +82,7 @@ export default function WorkflowStatusSelect({
         onClick={(e) => e.stopPropagation()}
         onPointerDown={(e) => e.stopPropagation()}
       >
-        {WORKFLOW_STATUSES.map((s) => (
+        {options.map((s) => (
           <option key={s} value={s}>
             {s}
           </option>

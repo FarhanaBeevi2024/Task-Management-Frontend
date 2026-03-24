@@ -1,6 +1,7 @@
 import React from 'react';
 import { getAssigneeInitialsFromEmail } from '../utils/assigneeInitials.js';
 import WorkflowStatusSelect from './WorkflowStatusSelect.jsx';
+import { isWorkflowStatusEditableForBoard } from '../constants/workflowStatus.js';
 import './IssueCard.css';
 
 const IssueCard = ({
@@ -10,6 +11,8 @@ const IssueCard = ({
   users = [],
   onAssign,
   onDragStart,
+  /** Normalized user ids (reporter/created_by) who are project `client` — highlights for all viewers */
+  projectClientCreatorIds = null,
 }) => {
   const issueType = issue.issue_type || {};
   const statusConfig = {
@@ -43,11 +46,18 @@ const IssueCard = ({
   const assigneeEmail = currentUser?.email || issue.assignee?.email || '';
   const assigneeInitial = getAssigneeInitialsFromEmail(assigneeEmail);
 
-  const creatorId = issue.created_by || issue.reporter_id;
-  const createdByClient =
+  const normId = (id) =>
+    id == null || id === '' ? '' : String(id).trim().toLowerCase().replace(/-/g, '');
+  const creatorNorm = normId(issue.reporter_id || issue.created_by);
+  const apiSaysClient =
     issue.created_by_client === true ||
-    (!!creatorId &&
-      users.some((u) => u.user_id === creatorId && u.role === 'client'));
+    issue.created_by_client === 'true' ||
+    issue.created_by_client === 1;
+  const inProjectClientSet =
+    projectClientCreatorIds instanceof Set &&
+    creatorNorm &&
+    projectClientCreatorIds.has(creatorNorm);
+  const createdByClient = Boolean(apiSaysClient || inProjectClientSet);
 
   return (
     <div
@@ -76,15 +86,18 @@ const IssueCard = ({
           <div className="story-points">{issue.story_points} SP</div>
         )}
       </div>
-      <div className="issue-workflow-row">
-        <WorkflowStatusSelect
-          value={issue.workflow_status}
-          badgeOnly
-          size="compact"
-          className="issue-workflow-badge"
-          aria-label={`Workflow status for ${issue.issue_key || 'task'}`}
-        />
-      </div>
+      {isWorkflowStatusEditableForBoard(issue.status) && (
+        <div className="issue-workflow-row">
+          <WorkflowStatusSelect
+            value={issue.workflow_status}
+            boardStatus={issue.status}
+            badgeOnly
+            size="compact"
+            className="issue-workflow-badge"
+            aria-label={`Workflow status for ${issue.issue_key || 'task'}`}
+          />
+        </div>
+      )}
       <h4 className="issue-summary">{issue.summary}</h4>
       {issue.description && (
         <p className="issue-description">{issue.description}</p>

@@ -1,8 +1,20 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import JiraDashboard from './JiraDashboard.jsx';
 import SuperAdminDashboard from './SuperAdminDashboard.jsx';
 import { AccessConfigProvider } from '../context/AccessConfigContext.jsx';
+import { OrganizationProvider } from '../context/OrganizationContext.jsx';
 import { api } from '../services/api';
+
+function JiraWithOrg({ session, onLogout }) {
+  const [orgEpoch, setOrgEpoch] = useState(0);
+  const bumpOrg = useCallback(() => setOrgEpoch((e) => e + 1), []);
+
+  return (
+    <OrganizationProvider session={session} onOrganizationChange={bumpOrg}>
+      <JiraDashboard key={orgEpoch} session={session} onLogout={onLogout} />
+    </OrganizationProvider>
+  );
+}
 
 function AuthenticatedHome({ session, onLogout }) {
   const [loading, setLoading] = useState(true);
@@ -33,7 +45,7 @@ function AuthenticatedHome({ session, onLogout }) {
 
   return (
     <AccessConfigProvider session={session}>
-      <JiraDashboard session={session} onLogout={onLogout} />
+      <JiraWithOrg session={session} onLogout={onLogout} />
     </AccessConfigProvider>
   );
 }

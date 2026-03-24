@@ -12,7 +12,9 @@ import WorkItemsView from '../components/WorkItemsView.jsx';
 import CalendarView from '../components/CalendarView.jsx';
 import MilestonesView from '../components/MilestonesView.jsx';
 import RolesManagement from '../components/RolesManagement.jsx';
+import TopBar from '../components/TopBar.jsx';
 import { useAccessConfig } from '../context/AccessConfigContext.jsx';
+import { useOrganization } from '../context/OrganizationContext.jsx';
 import './JiraDashboard.css';
 
 /**
@@ -20,6 +22,12 @@ import './JiraDashboard.css';
  * Composes DashboardNavBar, ProjectsView, RecentIssuesView, TaskBoardView, and modals.
  */
 function JiraDashboard({ session, onLogout }) {
+  const {
+    ready: orgReady,
+    organizations,
+    activeOrganizationId,
+    switchOrganization,
+  } = useOrganization();
   const {
     canUserCreateProject,
     canCreateIssues,
@@ -89,6 +97,16 @@ function JiraDashboard({ session, onLogout }) {
       await fetchNotifications();
     } catch (error) {
       console.error('Error fetching user info:', error);
+      // Fallback: if the backend call fails (often token timing), populate email from session.
+      const email = session?.user?.email;
+      const id = session?.user?.id;
+      if (email || id) {
+        setCurrentUser({
+          id: id ?? null,
+          email: email ?? '',
+          role: userRole ?? 'user',
+        });
+      }
     }
   };
 
@@ -254,24 +272,84 @@ function JiraDashboard({ session, onLogout }) {
 
   const handleSelectProject = (project) => {
     setSelectedProject(project);
+    if (!project) {
+      setMainView(DASHBOARD_VIEWS.PROJECTS);
+      return;
+    }
+    // Keep current project-related view if possible; otherwise default to Overview.
+    const projectViews = new Set([
+      DASHBOARD_VIEWS.OVERVIEW,
+      DASHBOARD_VIEWS.BOARD,
+      DASHBOARD_VIEWS.CALENDAR,
+      DASHBOARD_VIEWS.WORK_ITEMS,
+      DASHBOARD_VIEWS.MILESTONES,
+    ]);
+    if (projectViews.has(mainView)) return;
     setMainView(DASHBOARD_VIEWS.OVERVIEW);
   };
+
+  if (!orgReady) {
+    return (
+      <div className="jira-dashboard-container">
+        <div className="dashboard-main-content" style={{ padding: '2rem' }}>
+          Loading workspace…
+        </div>
+      </div>
+    );
+  }
+
+  if (organizations.length === 0) {
+    return (
+      <div className="jira-dashboard-container">
+        <DashboardNavBar
+          mainView={mainView}
+          onViewChange={handleNavViewChange}
+          onLogout={onLogout}
+          userRole={userRole}
+          selectedProject={selectedProject}
+          projectRole={selectedProject?.current_user_project_role ?? null}
+          notificationsCount={notifications.length}
+          onBackToProjects={handleBackToProjects}
+          orgMemberRole={currentUser?.org_member_role ?? null}
+        />
+        <main className="dashboard-main">
+          <TopBar
+            currentUser={currentUser}
+            selectedProject={selectedProject}
+            onLogout={onLogout}
+          />
+          <div className="dashboard-main-content" style={{ padding: '2rem', maxWidth: '32rem' }}>
+            <h2>No organization</h2>
+            <p>
+              Your account is not linked to an organization yet. Ask a super admin or admin to send
+              you an invitation email with a signup link.
+            </p>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="jira-dashboard-container">
       <DashboardNavBar
-        currentUser={currentUser}
         mainView={mainView}
         onViewChange={handleNavViewChange}
         onLogout={onLogout}
         userRole={userRole}
         selectedProject={selectedProject}
-        onBackToProjects={handleBackToProjects}
         projectRole={selectedProject?.current_user_project_role ?? null}
         notificationsCount={notifications.length}
+        onBackToProjects={handleBackToProjects}
+        orgMemberRole={currentUser?.org_member_role ?? null}
       />
 
       <main className="dashboard-main">
+        <TopBar
+          currentUser={currentUser}
+          selectedProject={selectedProject}
+          onLogout={onLogout}
+        />
         {mainView === DASHBOARD_VIEWS.USER_MANAGEMENT ? (
           <UserManagement session={session} />
         ) : mainView === DASHBOARD_VIEWS.ROLES ? (
@@ -390,7 +468,6 @@ function JiraDashboard({ session, onLogout }) {
 
       {showProjectForm && (
         <ProjectForm
-          session={session}
           onSubmit={handleCreateProject}
           onCancel={() => setShowProjectForm(false)}
         />

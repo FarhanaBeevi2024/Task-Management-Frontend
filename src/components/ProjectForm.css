@@ -41,8 +41,7 @@
 }
 
 .project-form-modal .form-group input,
-.project-form-modal .form-group textarea,
-.project-form-modal .form-group select {
+.project-form-modal .form-group textarea {
   width: 100%;
   padding: 0.875rem 1rem;
   border: 2px solid #e5e7eb;
@@ -52,35 +51,10 @@
 }
 
 .project-form-modal .form-group input:focus,
-.project-form-modal .form-group textarea:focus,
-.project-form-modal .form-group select:focus {
+.project-form-modal .form-group textarea:focus {
   outline: none;
   border-color: #667eea;
   box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
-}
-
-.form-row-inline {
-  display: flex;
-  gap: 0.5rem;
-  align-items: center;
-}
-
-.form-row-inline select {
-  flex: 1;
-}
-
-.btn-secondary {
-  padding: 0.5rem 1rem;
-  background: #f3f4f6;
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: 500;
-  font-size: 0.875rem;
-}
-
-.btn-secondary:hover {
-  background: #e5e7eb;
 }
 
 .project-form-modal .form-actions {

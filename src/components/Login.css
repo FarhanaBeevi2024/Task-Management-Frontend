@@ -1,3 +1,10 @@
+.input-readonly,
+input.input-readonly:disabled {
+  background: #f3f4f6 !important;
+  color: #4b5563 !important;
+  cursor: not-allowed;
+}
+
 .login-container {
   display: flex;
   justify-content: center;
@@ -24,6 +31,13 @@
 @keyframes move {
   0% { transform: translate(0, 0); }
   100% { transform: translate(50px, 50px); }
+}
+
+.login-hint {
+  font-size: 0.85rem;
+  color: #6b7280;
+  margin: 0 0 1rem 0;
+  line-height: 1.45;
 }
 
 .login-card {

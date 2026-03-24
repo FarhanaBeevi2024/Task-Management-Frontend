@@ -15,8 +15,8 @@ The React app loads permissions via **`AccessConfigProvider`** (`frontend/src/co
 
 | Flag | Backend | Frontend (UX) |
 |------|---------|-----------------|
-| **canManageUsers** | `PUT /api/admin/users/*`, `PUT /api/admin/role-access` | Users + Access Control menus |
-| **canViewAllUsers** | `GET /api/users` (org list: with **canManageUsers** or **canViewAllUsers**; superadmin “all profiles” branch still requires **canViewAllUsers**) | User lists / assignee dropdowns only load if API allows |
+| **canManageUsers** | `PUT /api/admin/users/*`, `PUT /api/admin/role-access`; `GET /api/users?include_pending_signups=1` also lists profiles with no `organization_members` row | Users + Access Control; User Management shows self-signups + **Add to workspace** |
+| **canViewAllUsers** | `GET /api/users` (org members; superadmin = all profiles if **canViewAllUsers**) | Assignee dropdowns, etc. |
 | **canCreateProjects** | `POST /api/jira/projects` | Create Project button |
 | **canViewAllProjects** | `GET /api/jira/projects` (all org projects vs member-only); `GET /api/jira/projects/:id`; issues/sprints/milestones use **project access** | Project list from API |
 | **autoMemberOnCreate** | `POST /api/jira/projects` (add creator to `project_members`) | — |

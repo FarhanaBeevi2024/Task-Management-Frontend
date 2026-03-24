@@ -119,6 +119,13 @@
   color: #111827;
 }
 
+.add-member-hint {
+  margin: 0 0 0.75rem;
+  font-size: 0.8rem;
+  color: #6b7280;
+  line-height: 1.45;
+}
+
 .form-row-inline {
   display: flex;
   gap: 0.5rem;
@@ -126,11 +133,28 @@
   flex-wrap: wrap;
 }
 
+.add-member-form-row {
+  align-items: stretch;
+}
+
 .add-member-form select {
   border-radius: 8px;
   border: 1px solid #d1d5db;
   padding: 0.4rem 0.6rem;
   font-size: 0.85rem;
+}
+
+/* User list can be long emails — give this control most of the row */
+.add-member-user-select {
+  flex: 1 1 320px;
+  min-width: min(100%, 16rem);
+  width: 100%;
+  max-width: 100%;
+}
+
+.add-member-role-select {
+  flex: 0 0 auto;
+  min-width: 10.5rem;
 }
 
 .btn-secondary {

@@ -5,6 +5,7 @@ import WorkflowStatusSelect from './WorkflowStatusSelect.jsx';
 import {
   DEFAULT_WORKFLOW_STATUS,
   normalizeWorkflowStatus,
+  isWorkflowStatusEditableForBoard,
 } from '../constants/workflowStatus.js';
 import './IssueForm.css';
 
@@ -58,7 +59,7 @@ const IssueForm = ({ project, issue, parentIssue, session, onSubmit, onCancel, u
       setEstimatedDays(issue.estimated_days ?? '');
       setActualDays(issue.actual_days ?? '');
       setExposedToClient(issue.exposed_to_client === true);
-      setWorkflowStatus(normalizeWorkflowStatus(issue.workflow_status));
+      setWorkflowStatus(normalizeWorkflowStatus(issue.workflow_status, issue.status));
     } else if (parentIssue) {
       setParentIssueId(parentIssue.id || '');
       setWorkflowStatus(DEFAULT_WORKFLOW_STATUS);
@@ -128,7 +129,9 @@ const IssueForm = ({ project, issue, parentIssue, session, onSubmit, onCancel, u
       estimated_days: estimatedDays === '' ? null : parseInt(estimatedDays, 10),
       actual_days: actualDays === '' ? null : parseInt(actualDays, 10),
       exposed_to_client: exposedToClient,
-      ...(isClientUser ? {} : { workflow_status: workflowStatus }),
+      ...(isClientUser || !issue || !isWorkflowStatusEditableForBoard(issue.status)
+        ? {}
+        : { workflow_status: workflowStatus }),
     });
   };
 
@@ -207,12 +210,13 @@ const IssueForm = ({ project, issue, parentIssue, session, onSubmit, onCancel, u
             </div>
           </div>
 
-          {!isClientUser && (
+          {!isClientUser && issue && isWorkflowStatusEditableForBoard(issue.status) && (
             <div className="form-group">
               <label>Workflow status</label>
               <WorkflowStatusSelect
                 value={workflowStatus}
                 onChange={setWorkflowStatus}
+                boardStatus={issue.status}
                 showBadge
                 className="issue-form-workflow-field"
               />

@@ -3,14 +3,7 @@ import { api } from '../services/api';
 import { useAccessConfig } from '../context/AccessConfigContext.jsx';
 import './ProjectOverview.css';
 
-const PROJECT_ROLES = [
-  'superadmin',
-  'admin',
-  'team_leader',
-  'team_member',
-  'client',
-  'viewer',
-];
+const PROJECT_ROLES = ['admin', 'team_leader', 'team_member', 'client'];
 
 function ProjectOverview({ project, session, userRole }) {
   const { canManageProjectMembers } = useAccessConfig();
@@ -58,7 +51,11 @@ function ProjectOverview({ project, session, userRole }) {
   const fetchUsers = async () => {
     try {
       setLoadingUsers(true);
-      const response = await api.get('/api/users');
+      // Include invited users that exist as auth profiles but aren't linked to org_members yet.
+      // This enables adding invited users to a project.
+      const response = await api.get('/api/users', {
+        params: { include_pending_signups: '1' },
+      });
       setUsers(Array.isArray(response.data) ? response.data : []);
     } catch (err) {
       console.error('Error fetching users:', err);
@@ -211,7 +208,6 @@ function ProjectOverview({ project, session, userRole }) {
             <thead>
               <tr>
                 <th>User</th>
-                <th>Global role</th>
                 <th>Project role</th>
                 {canManageMembers && <th />}
               </tr>
@@ -220,7 +216,6 @@ function ProjectOverview({ project, session, userRole }) {
               {members.map((m) => (
                 <tr key={m.user_id}>
                   <td>{m.email}</td>
-                  <td>{m.global_role}</td>
                   <td>{m.project_role}</td>
                   {canManageMembers && (
                     <td>
@@ -242,20 +237,28 @@ function ProjectOverview({ project, session, userRole }) {
         {canManageMembers && (
           <form onSubmit={handleAddMember} className="add-member-form">
             <h4>Add user to this project</h4>
-            <div className="form-row-inline">
+            <p className="add-member-hint">
+              The list includes everyone in your current organization (invited users appear after they
+              complete signup). Users already on this project are hidden from the dropdown.
+            </p>
+            <div className="form-row-inline add-member-form-row">
               <select
+                className="add-member-user-select"
                 value={selectedUserId}
                 onChange={(e) => setSelectedUserId(e.target.value)}
                 disabled={loadingUsers}
               >
                 <option value="">Select user</option>
-                {users.map((u) => (
+                {users
+                  .filter((u) => !members.some((m) => m.user_id === u.user_id))
+                  .map((u) => (
                   <option key={u.user_id} value={u.user_id}>
-                    {u.email} ({u.role})
+                    {u.email} ({u.role === 'admin' ? 'Admin' : 'User'})
                   </option>
                 ))}
               </select>
               <select
+                className="add-member-role-select"
                 value={selectedProjectRole}
                 onChange={(e) => setSelectedProjectRole(e.target.value)}
               >

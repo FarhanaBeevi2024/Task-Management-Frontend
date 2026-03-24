@@ -1,53 +1,21 @@
-import React, { useState, useEffect } from 'react';
-import { api } from '../services/api';
-import ClientForm from './ClientForm.jsx';
+import React, { useState } from 'react';
 import './ProjectForm.css';
 
 /**
  * Modal form for creating a new project.
- * Supports optional client selection and inline creation of a new client.
  */
-function ProjectForm({ session, onSubmit, onCancel }) {
+function ProjectForm({ onSubmit, onCancel }) {
   const [key, setKey] = useState('');
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [clientId, setClientId] = useState('');
-  const [clients, setClients] = useState([]);
-  const [showClientForm, setShowClientForm] = useState(false);
-
-  useEffect(() => {
-    fetchClients();
-  }, []);
-
-  const fetchClients = async () => {
-    try {
-      const response = await api.get('/api/jira/clients');
-      setClients(response.data ?? []);
-    } catch (error) {
-      console.error('Error fetching clients:', error);
-    }
-  };
-
-  const handleCreateClient = async (clientData) => {
-    try {
-      const response = await api.post('/api/jira/clients', clientData);
-      setClientId(response.data.id);
-      setShowClientForm(false);
-      fetchClients();
-    } catch (error) {
-      console.error('Error creating client:', error);
-      alert('Failed to create client');
-    }
-  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSubmit({ key, name, description, client_id: clientId || null });
+    onSubmit({ key, name, description, client_id: null });
   };
 
   return (
-    <>
-      <div className="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="project-form-title">
+    <div className="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="project-form-title">
         <div className="modal-content project-form-modal">
           <h2 id="project-form-title">Create Project</h2>
           <form onSubmit={handleSubmit}>
@@ -84,26 +52,6 @@ function ProjectForm({ session, onSubmit, onCancel }) {
                 rows={3}
               />
             </div>
-            <div className="form-group">
-              <label htmlFor="project-client">Client / Customer</label>
-              <div className="form-row-inline">
-                <select
-                  id="project-client"
-                  value={clientId}
-                  onChange={(e) => setClientId(e.target.value)}
-                >
-                  <option value="">No Client</option>
-                  {clients.map((client) => (
-                    <option key={client.id} value={client.id}>
-                      {client.name} {client.company ? `(${client.company})` : ''}
-                    </option>
-                  ))}
-                </select>
-                <button type="button" className="btn-secondary" onClick={() => setShowClientForm(true)}>
-                  + New
-                </button>
-              </div>
-            </div>
             <div className="form-actions">
               <button type="button" onClick={onCancel} className="cancel-btn">
                 Cancel
@@ -114,14 +62,7 @@ function ProjectForm({ session, onSubmit, onCancel }) {
             </div>
           </form>
         </div>
-      </div>
-      {showClientForm && (
-        <ClientForm
-          onSubmit={handleCreateClient}
-          onCancel={() => setShowClientForm(false)}
-        />
-      )}
-    </>
+    </div>
   );
 }
 

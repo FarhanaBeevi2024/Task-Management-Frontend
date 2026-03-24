@@ -30,6 +30,16 @@ const Dashboard = ({ session, onLogout }) => {
       setUserRole(response.data.role);
     } catch (error) {
       console.error('Error fetching user info:', error);
+      const email = session?.user?.email;
+      const id = session?.user?.id;
+      if (email || id) {
+        setCurrentUser({
+          id: id ?? null,
+          email: email ?? '',
+          role: userRole ?? 'user',
+        });
+        setUserRole(userRole ?? 'user');
+      }
     }
   };
 

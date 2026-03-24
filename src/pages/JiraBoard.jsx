@@ -12,7 +12,10 @@ const STATUS_LABELS = {
   done: 'Completed'
 };
 
-const JiraBoard = ({ project, session, onIssueClick, projectRole, userRole }) => {
+const normUserId = (id) =>
+  id == null || id === '' ? '' : String(id).trim().toLowerCase().replace(/-/g, '');
+
+const JiraBoard = ({ project, onIssueClick, projectRole, userRole }) => {
   const { canAssignIssuesToOthers } = useAccessConfig();
   const [issues, setIssues] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -27,6 +30,7 @@ const JiraBoard = ({ project, session, onIssueClick, projectRole, userRole }) =>
   const [canAssignTasks, setCanAssignTasks] = useState(false);
   const [draggedIssueId, setDraggedIssueId] = useState(null);
   const [toast, setToast] = useState(null);
+  const [projectClientCreatorIds, setProjectClientCreatorIds] = useState(() => new Set());
 
   const isClientView = projectRole === 'client';
   const allStatuses = [
@@ -58,6 +62,31 @@ const JiraBoard = ({ project, session, onIssueClick, projectRole, userRole }) =>
       fetchMilestones();
     }
   }, [project, sprint]);
+
+  useEffect(() => {
+    if (!project?.id) {
+      setProjectClientCreatorIds(new Set());
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await api.get(`/api/jira/projects/${project.id}/members`);
+        const next = new Set();
+        (Array.isArray(res.data) ? res.data : []).forEach((m) => {
+          if (String(m.project_role || '').toLowerCase() === 'client') {
+            next.add(normUserId(m.user_id));
+          }
+        });
+        if (!cancelled) setProjectClientCreatorIds(next);
+      } catch {
+        if (!cancelled) setProjectClientCreatorIds(new Set());
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [project?.id]);
 
   useEffect(() => {
     if (project && milestoneFilter !== undefined) fetchIssues();
@@ -274,6 +303,7 @@ const JiraBoard = ({ project, session, onIssueClick, projectRole, userRole }) =>
                   <IssueCard
                     key={issue.id}
                     issue={issue}
+                    projectClientCreatorIds={projectClientCreatorIds}
                     onClick={() => onIssueClick && onIssueClick(issue)}
                     users={users}
                     onAssign={

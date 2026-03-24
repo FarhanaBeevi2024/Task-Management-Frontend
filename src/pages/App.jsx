@@ -1,20 +1,83 @@
-import React, { useState, useEffect } from 'react';
-import { supabase } from '../services/supabase';
+import React, { useState, useEffect, useMemo } from 'react';
+import {
+  supabase,
+  getInitialSupabaseAuthHashType,
+  getInitialSupabaseAuthQueryType,
+} from '../services/supabase';
 import Login from '../components/Login.jsx';
+import InviteSignup from '../components/InviteSignup.jsx';
+import ResetPassword from '../components/ResetPassword.jsx';
 import AuthenticatedHome from './AuthenticatedHome.jsx';
-import { setApiAccessToken } from '../services/api';
+import { setApiAccessToken, setActiveOrganizationId } from '../services/api';
+
+function readInviteTokenFromUrl() {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('invite')?.trim() || null;
+  } catch {
+    return null;
+  }
+}
+
+/** Flows that must not open the “reset password” screen (invite / signup / magic link). */
+const NON_RECOVERY_HASH_TYPES = new Set(['invite', 'signup', 'magiclink', 'email', 'email_change']);
+
+function isRecoveryFlowFromUrl() {
+  try {
+    if (readInviteTokenFromUrl()) return false;
+    const query = new URLSearchParams(window.location.search);
+    const hashRaw = (window.location.hash || '').replace(/^#/, '');
+    const hash = new URLSearchParams(hashRaw);
+    const t = (query.get('type') || hash.get('type') || '').toLowerCase();
+    if (NON_RECOVERY_HASH_TYPES.has(t)) return false;
+    return t === 'recovery';
+  } catch {
+    return false;
+  }
+}
+
+/** True only when the auth callback was explicitly password recovery (not signup/invite). */
+function isExplicitRecoveryAuthCallback() {
+  if (readInviteTokenFromUrl()) return false;
+  const initial = getInitialSupabaseAuthHashType();
+  if (NON_RECOVERY_HASH_TYPES.has(initial)) return false;
+  return initial === 'recovery';
+}
+
+function shouldOpenRecoveryAfterPasswordRecoveryEvent() {
+  return isExplicitRecoveryAuthCallback();
+}
 
 function App() {
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [inviteToken, setInviteToken] = useState(() => readInviteTokenFromUrl());
+  const [showRecoveryFlow, setShowRecoveryFlow] = useState(() => {
+    if (readInviteTokenFromUrl()) return false;
+    const fromHash = getInitialSupabaseAuthHashType();
+    const fromQuery = getInitialSupabaseAuthQueryType();
+    if (NON_RECOVERY_HASH_TYPES.has(fromHash) || NON_RECOVERY_HASH_TYPES.has(fromQuery)) {
+      return false;
+    }
+    if (fromHash === 'recovery' || fromQuery === 'recovery') return true;
+    return isRecoveryFlowFromUrl();
+  });
 
   useEffect(() => {
-    // Check for existing session
+    const onPop = () => {
+      setInviteToken(readInviteTokenFromUrl());
+      setShowRecoveryFlow(isRecoveryFlowFromUrl());
+    };
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
+  }, []);
+
+  useEffect(() => {
     supabase.auth
       .getSession()
-      .then(({ data: { session } }) => {
-        setSession(session);
-        setApiAccessToken(session?.access_token || null);
+      .then(({ data: { session: s } }) => {
+        setSession(s);
+        setApiAccessToken(s?.access_token || null);
       })
       .catch(() => {
         setSession(null);
@@ -24,12 +87,21 @@ function App() {
         setLoading(false);
       });
 
-    // Listen for auth changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      setApiAccessToken(session?.access_token || null);
+    } = supabase.auth.onAuthStateChange((event, s) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        // Invite/signup redirects sometimes trigger this; only show reset UI for real recovery.
+        setShowRecoveryFlow(shouldOpenRecoveryAfterPasswordRecoveryEvent());
+      }
+      if (event === 'SIGNED_IN' && s) {
+        // After normal login or invite completion, never leave reset-password UI stuck on.
+        if (!isExplicitRecoveryAuthCallback()) {
+          setShowRecoveryFlow(false);
+        }
+      }
+      setSession(s);
+      setApiAccessToken(s?.access_token || null);
     });
 
     return () => subscription.unsubscribe();
@@ -44,16 +116,47 @@ function App() {
     await supabase.auth.signOut();
     setSession(null);
     setApiAccessToken(null);
+    setActiveOrganizationId(null);
   };
+
+  const clearInviteFromUrl = () => {
+    try {
+      const url = new URL(window.location.href);
+      url.searchParams.delete('invite');
+      window.history.replaceState({}, '', url.pathname + url.search || window.location.pathname);
+    } catch {
+      /* ignore */
+    }
+    setInviteToken(null);
+    setShowRecoveryFlow(false);
+  };
+
+  const clearRecoveryFromUrl = () => {
+    try {
+      const url = new URL(window.location.href);
+      url.searchParams.delete('type');
+      window.history.replaceState({}, '', url.pathname + url.search || window.location.pathname);
+      if (window.location.hash) {
+        window.history.replaceState({}, '', url.pathname + url.search);
+      }
+    } catch {
+      /* ignore */
+    }
+    setShowRecoveryFlow(false);
+  };
+
+  const showInviteFlow = useMemo(() => Boolean(inviteToken), [inviteToken]);
 
   if (loading) {
     return (
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        height: '100vh' 
-      }}>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          height: '100vh',
+        }}
+      >
         <div>Loading...</div>
       </div>
     );
@@ -61,7 +164,25 @@ function App() {
 
   return (
     <div className="App">
-      {session ? (
+      {showInviteFlow ? (
+        <InviteSignup
+          token={inviteToken}
+          session={session}
+          onCompleteSignIn={() => {
+            clearInviteFromUrl();
+          }}
+        />
+      ) : showRecoveryFlow ? (
+        <ResetPassword
+          onDone={async () => {
+            clearRecoveryFromUrl();
+            await supabase.auth.signOut();
+            setSession(null);
+            setApiAccessToken(null);
+            setActiveOrganizationId(null);
+          }}
+        />
+      ) : session ? (
         <AuthenticatedHome session={session} onLogout={handleLogout} />
       ) : (
         <Login onLogin={handleLogin} />
@@ -71,4 +192,3 @@ function App() {
 }
 
 export default App;
-

@@ -3,7 +3,10 @@ import { api } from '../services/api';
 import { getAssigneeInitialsFromEmail } from '../utils/assigneeInitials.js';
 import { useAccessConfig } from '../context/AccessConfigContext.jsx';
 import WorkflowStatusSelect from './WorkflowStatusSelect.jsx';
-import { normalizeWorkflowStatus } from '../constants/workflowStatus.js';
+import {
+  normalizeWorkflowStatus,
+  isWorkflowStatusEditableForBoard,
+} from '../constants/workflowStatus.js';
 import './IssueDetail.css';
 
 const statusOptions = [
@@ -69,7 +72,7 @@ const IssueDetail = ({ issue, session, onClose, onEdit, onUpdate, onAddSubtask, 
       setAssigneeId(issue.assignee_id || '');
       setMilestoneId(issue.milestone_id || '');
       setExposedToClient(issue.exposed_to_client === true);
-      setWorkflowStatus(normalizeWorkflowStatus(issue.workflow_status));
+      setWorkflowStatus(normalizeWorkflowStatus(issue.workflow_status, issue.status));
     }
   }, [issue]);
 
@@ -140,7 +143,9 @@ const IssueDetail = ({ issue, session, onClose, onEdit, onUpdate, onAddSubtask, 
           assignee_id: assigneeId || null,
           milestone_id: milestoneId || null,
           exposed_to_client: exposedToClient,
-          ...(isClientUser ? {} : { workflow_status: workflowStatus }),
+          ...(isClientUser || !isWorkflowStatusEditableForBoard(status)
+            ? {}
+            : { workflow_status: workflowStatus }),
         }
       );
       if (onUpdate) onUpdate(response.data);
@@ -280,24 +285,31 @@ const IssueDetail = ({ issue, session, onClose, onEdit, onUpdate, onAddSubtask, 
               <select
                 className="detail-select status-select"
                 value={status}
-                onChange={(e) => setStatus(e.target.value)}
+                onChange={(e) => {
+                  const next = e.target.value;
+                  setStatus(next);
+                  setWorkflowStatus((w) => normalizeWorkflowStatus(w, next));
+                }}
               >
                 {statusOptions.map(opt => (
                   <option key={opt.value} value={opt.value}>{opt.label}</option>
                 ))}
               </select>
             </div>
-            <div className="meta-item meta-item--workflow-status">
-              <span className="meta-label">Workflow status:</span>
-              <WorkflowStatusSelect
-                value={workflowStatus}
-                onChange={setWorkflowStatus}
-                readOnly={isClientUser}
-                showBadge
-                className="detail-workflow-status-field"
-                selectClassName="detail-select"
-              />
-            </div>
+            {isWorkflowStatusEditableForBoard(status) && (
+              <div className="meta-item meta-item--workflow-status">
+                <span className="meta-label">Workflow status:</span>
+                <WorkflowStatusSelect
+                  value={workflowStatus}
+                  onChange={setWorkflowStatus}
+                  boardStatus={status}
+                  readOnly={isClientUser}
+                  showBadge
+                  className="detail-workflow-status-field"
+                  selectClassName="detail-select"
+                />
+              </div>
+            )}
             <div className="meta-item">
               <span className="meta-label">Internal Priority:</span>
               <select

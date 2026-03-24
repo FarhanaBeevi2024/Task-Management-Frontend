@@ -1,0 +1,160 @@
+.topbar {
+  height: 52px;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 0.4rem 1rem;
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+  position: sticky;
+  top: 0;
+  z-index: 60;
+}
+
+.topbar-left {
+  display: flex;
+  align-items: center;
+}
+
+.topbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.topbar-brand-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 1.05rem;
+  margin-top: 4px;
+  flex-shrink: 0;
+}
+
+.topbar-brand-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+}
+
+.topbar-brand-title {
+  font-weight: 800;
+  color: #111827;
+  font-size: 1rem;
+  margin-top: 2px;
+}
+
+.topbar-brand-project {
+  font-size: 0.82rem;
+  color: #6b7280;
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 360px;
+}
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.topbar-org {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #111827;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+.topbar-org-prefix {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.topbar-org-name {
+  font-weight: 600;
+  color: #111827;
+}
+
+.topbar-org-select {
+  padding: 0.35rem 0.6rem;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  background: #fff;
+  font-size: 0.9rem;
+  max-width: 220px;
+}
+
+.topbar-user {
+  position: relative;
+}
+
+.topbar-user-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  color: #ffffff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.topbar-user-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  width: 260px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.2);
+  padding: 0.8rem;
+  z-index: 70;
+}
+
+.topbar-user-menu-name {
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 0.25rem;
+}
+
+.topbar-user-menu-email {
+  font-size: 0.85rem;
+  color: #6b7280;
+  margin-bottom: 0.75rem;
+}
+
+.topbar-user-menu-divider {
+  height: 1px;
+  background: #e5e7eb;
+  margin: 0 0 0.75rem 0;
+}
+
+.topbar-logout-btn {
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  border-radius: 10px;
+  background: #f3f4f6;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  color: #374151;
+}
+
+.topbar-logout-btn:hover {
+  background: #e5e7eb;
+}
+

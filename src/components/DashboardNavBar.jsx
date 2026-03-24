@@ -1,5 +1,6 @@
 import React from 'react';
 import { useAccessConfig } from '../context/AccessConfigContext.jsx';
+import { useOrganization } from '../context/OrganizationContext.jsx';
 import './DashboardNavBar.css';
 
 const VIEWS = {
@@ -19,56 +20,74 @@ const VIEWS = {
  * Sidebar navigation. When a project is selected: current project (click = back to list), Overview, Board.
  * When no project: Projects, Recent issues, etc.
  */
-function DashboardNavBar({ currentUser, mainView, onViewChange, onLogout, userRole, selectedProject, onBackToProjects, projectRole, notificationsCount = 0 }) {
+function DashboardNavBar({
+  mainView,
+  onViewChange,
+  onLogout,
+  userRole,
+  selectedProject,
+  onBackToProjects,
+  projectRole,
+  notificationsCount = 0,
+  orgMemberRole = null,
+}) {
   const { canManageUsers, canShowMilestonesNav } = useAccessConfig();
+  const { organizations, activeOrganizationId, switchOrganization } = useOrganization();
   const isProjectRoleClient = projectRole === 'client';
-  const showUserManagement = canManageUsers(userRole);
+  const showUserManagement = canManageUsers(userRole) || orgMemberRole === 'admin';
   const showRoles = canManageUsers(userRole);
-  const displayName = currentUser?.email?.split('@')[0] || 'User';
-  const initial = currentUser?.email?.charAt(0).toUpperCase() || 'U';
+
+  const orgName = (() => {
+    const match = (organizations || []).find((o) => String(o.id) === String(activeOrganizationId));
+    return match?.name || null;
+  })();
 
   const handleNavClick = (view) => {
     if (onViewChange) onViewChange(view);
   };
 
+  const handleOrganizationChange = (orgId) => {
+    switchOrganization(orgId);
+    // Changing workspace should always bring user back to the projects list.
+    if (onBackToProjects) onBackToProjects();
+    if (onViewChange) onViewChange(VIEWS.PROJECTS);
+  };
+
   return (
     <aside className="dashboard-sidebar">
-      <div className="sidebar-user">
-        <div className="user-avatar-large">{initial}</div>
-        <div className="user-info">
-          <div className="user-name">{displayName}</div>
-          <div className="user-email">{currentUser?.email ?? ''}</div>
-        </div>
-      </div>
-
-      {selectedProject && (
+      <div className="sidebar-project-switcher">
         <button
           type="button"
-          className="sidebar-current-project"
+          className="sidebar-brand-btn"
           onClick={onBackToProjects}
-          title="Back to projects list"
+          title="Task Management"
         >
-          <div className="current-project-info">
-            <span className="current-project-key">{selectedProject.key}</span>
-            <span className="current-project-name">{selectedProject.name}</span>
-          </div>
+          <span className="sidebar-brand-icon" aria-hidden="true">
+            ✓
+          </span>
+          <span className="sidebar-brand-text">Task Management</span>
         </button>
-      )}
+      </div>
 
       <nav className="sidebar-menu">
         <div className="menu-section">
-          {!selectedProject && (
+          {!selectedProject && organizations.length > 0 && (
             <>
-              <button
-                type="button"
-                className={`menu-item ${mainView === VIEWS.PROJECTS ? 'active' : ''}`}
-                onClick={() => handleNavClick(VIEWS.PROJECTS)}
-              >
-                <span className="menu-icon">📊</span>
-                <span>Projects</span>
-              </button>
+              {organizations.map((org) => (
+                <button
+                  key={org.id}
+                  type="button"
+                  className={`menu-item ${String(activeOrganizationId) === String(org.id) ? 'active' : ''}`}
+                  onClick={() => handleOrganizationChange(org.id)}
+                  title={org.name}
+                >
+                  <span className="menu-icon">📊</span>
+                  <span>{org.name}</span>
+                </button>
+              ))}
             </>
           )}
+
           {selectedProject && (
             <>
               <button
@@ -77,7 +96,7 @@ function DashboardNavBar({ currentUser, mainView, onViewChange, onLogout, userRo
                 onClick={() => handleNavClick(VIEWS.OVERVIEW)}
               >
                 <span className="menu-icon">📄</span>
-                <span>Overview</span>
+                <span>{selectedProject?.name || 'Overview'}</span>
               </button>
               <button
                 type="button"
@@ -159,11 +178,7 @@ function DashboardNavBar({ currentUser, mainView, onViewChange, onLogout, userRo
         </div>
       </nav>
 
-      <div className="sidebar-footer">
-        <button type="button" onClick={onLogout} className="logout-btn-sidebar">
-          Logout
-        </button>
-      </div>
+      {/* Logout handled via TopBar user menu */}
     </aside>
   );
 }

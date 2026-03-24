@@ -186,3 +186,46 @@
   padding: 0;
 }
 
+.sa-card-hint {
+  margin: -0.25rem 0 0.85rem;
+  font-size: 0.85rem;
+  color: #64748b;
+  line-height: 1.45;
+}
+
+.sa-invite-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  min-width: 200px;
+}
+
+.sa-input-inline {
+  flex: none;
+  width: 100%;
+  font-size: 0.8rem;
+  padding: 0.45rem 0.5rem;
+}
+
+.sa-btn-small {
+  padding: 0.4rem 0.65rem;
+  font-size: 0.78rem;
+  align-self: flex-start;
+}
+
+.sa-invite-link-row {
+  display: flex;
+  gap: 0.35rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.sa-invite-link-input {
+  flex: 1 1 160px;
+  min-width: 0;
+  font-size: 0.68rem;
+  padding: 0.3rem 0.4rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+}
+

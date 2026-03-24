@@ -8,6 +8,9 @@ function SuperAdminDashboard({ onLogout }) {
   const [error, setError] = useState('');
   const [creating, setCreating] = useState(false);
   const [newOrgName, setNewOrgName] = useState('');
+  const [adminInviteEmail, setAdminInviteEmail] = useState({});
+  const [adminInviteLink, setAdminInviteLink] = useState({});
+  const [invitingOrgId, setInvitingOrgId] = useState(null);
 
   const stats = useMemo(() => {
     const total = orgs.length;
@@ -47,6 +50,33 @@ function SuperAdminDashboard({ onLogout }) {
       setError(e2.response?.data?.error || e2.message || 'Failed to create organization');
     } finally {
       setCreating(false);
+    }
+  };
+
+  const setEmailForOrg = (orgId, value) => {
+    setAdminInviteEmail((prev) => ({ ...prev, [orgId]: value }));
+  };
+
+  const inviteOrgAdmin = async (orgId) => {
+    const email = (adminInviteEmail[orgId] || '').trim().toLowerCase();
+    if (!email || !email.includes('@')) {
+      setError('Enter a valid admin email for this organization');
+      return;
+    }
+    try {
+      setInvitingOrgId(orgId);
+      setError('');
+      const res = await api.post(`/api/superadmin/organizations/${orgId}/invite-admin`, { email });
+      const url = res.data?.signup_url || '';
+      setAdminInviteLink((prev) => ({ ...prev, [orgId]: url }));
+      setEmailForOrg(orgId, '');
+      if (res.data?.email_send_error) {
+        setError(`Invite link generated, but email failed to send: ${res.data.email_send_error}`);
+      }
+    } catch (e) {
+      setError(e.response?.data?.error || e.message || 'Failed to invite admin');
+    } finally {
+      setInvitingOrgId(null);
     }
   };
 
@@ -95,6 +125,10 @@ function SuperAdminDashboard({ onLogout }) {
 
       <section className="sa-card">
         <h2>Create organization</h2>
+          <p className="sa-card-hint">
+          After creating an organization, invite an <strong>Admin</strong> below. They complete signup via the link
+          and receive role <strong>Admin</strong> for both the workspace and platform.
+        </p>
         <form className="sa-form" onSubmit={handleCreate}>
           <input
             className="sa-input"
@@ -128,6 +162,7 @@ function SuperAdminDashboard({ onLogout }) {
                   <th>Projects</th>
                   <th>Issues</th>
                   <th>Created</th>
+                  <th>Invite admin</th>
                   <th />
                 </tr>
               </thead>
@@ -147,6 +182,43 @@ function SuperAdminDashboard({ onLogout }) {
                     <td>{o.projects_count}</td>
                     <td>{o.issues_count}</td>
                     <td>{o.created_at ? new Date(o.created_at).toLocaleString() : ''}</td>
+                    <td>
+                      <div className="sa-invite-cell">
+                        <input
+                          type="email"
+                          className="sa-input sa-input-inline"
+                          placeholder="admin@company.com"
+                          value={adminInviteEmail[o.id] || ''}
+                          onChange={(e) => setEmailForOrg(o.id, e.target.value)}
+                          disabled={o.status !== 'active'}
+                        />
+                        <button
+                          type="button"
+                          className="sa-btn sa-btn-small"
+                          disabled={o.status !== 'active' || invitingOrgId === o.id}
+                          onClick={() => inviteOrgAdmin(o.id)}
+                        >
+                          {invitingOrgId === o.id ? 'Sending…' : 'Send link'}
+                        </button>
+                        {adminInviteLink[o.id] && (
+                          <div className="sa-invite-link-row">
+                            <input
+                              type="text"
+                              readOnly
+                              className="sa-invite-link-input"
+                              value={adminInviteLink[o.id]}
+                            />
+                            <button
+                              type="button"
+                              className="sa-link"
+                              onClick={() => navigator.clipboard?.writeText(adminInviteLink[o.id])}
+                            >
+                              Copy
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </td>
                     <td style={{ textAlign: 'right' }}>
                       <button
                         type="button"

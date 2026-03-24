@@ -52,7 +52,6 @@ function TaskBoardView({
         <JiraBoard
           key={boardRefreshKey}
           project={project}
-          session={session}
           userRole={userRole}
           onIssueClick={onIssueClick}
           projectRole={projectRole}
