@@ -28,7 +28,6 @@ function DashboardNavBar({
   selectedProject,
   onBackToProjects,
   projectRole,
-  notificationsCount = 0,
   orgMemberRole = null,
 }) {
   const { canManageUsers, canShowMilestonesNav } = useAccessConfig();
@@ -141,20 +140,6 @@ function DashboardNavBar({
         </div>
 
         <div className="menu-section">
-          <button
-            type="button"
-            className={`menu-item ${mainView === VIEWS.NOTIFICATIONS ? 'active' : ''}`}
-            onClick={() => handleNavClick(VIEWS.NOTIFICATIONS)}
-          >
-            <span className="menu-icon">🔔</span>
-            <span className="menu-label-with-badge">
-              <span>Notifications</span>
-              {notificationsCount > 0 && (
-                <span className="menu-badge">{notificationsCount}</span>
-              )}
-            </span>
-          </button>
-
           {showUserManagement && (
             <button
               type="button"

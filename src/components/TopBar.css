@@ -66,6 +66,59 @@
   gap: 1rem;
 }
 
+.topbar-notifications-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s ease;
+}
+
+.topbar-notifications-btn:hover {
+  background: #fef9c3;
+}
+
+.topbar-notifications-btn.is-active {
+  background: #fef08a;
+}
+
+.topbar-bell-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.topbar-bell-emoji {
+  font-size: 1.1rem;
+  line-height: 1;
+  display: block;
+}
+
+.topbar-notifications-badge {
+  position: absolute;
+  top: -6px;
+  right: -8px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: #ef4444;
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
+  box-sizing: border-box;
+}
+
 .topbar-org {
   display: flex;
   align-items: center;

@@ -14,13 +14,14 @@ function initialsFromNames(firstName, lastName) {
 }
 
 /**
- * Tiny horizontal top bar:
- * - left: project switcher
- * - right: organization name (+ switch if multiple) + user dropdown + logout
+ * Horizontal top bar: notifications bell, organization (or switcher), user menu.
  */
 export default function TopBar({
   currentUser,
   onLogout,
+  notificationsCount = 0,
+  onOpenNotifications,
+  notificationsActive = false,
 }) {
   const { organizations, activeOrganizationId, switchOrganization } = useOrganization();
   const [userMenuOpen, setUserMenuOpen] = useState(false);
@@ -63,6 +64,28 @@ export default function TopBar({
   return (
     <div className="topbar">
       <div className="topbar-right">
+        {onOpenNotifications && (
+          <button
+            type="button"
+            className={`topbar-notifications-btn${notificationsActive ? ' is-active' : ''}`}
+            onClick={onOpenNotifications}
+            title="Notifications"
+            aria-label={
+              notificationsCount > 0
+                ? `Notifications, ${notificationsCount} unread`
+                : 'Notifications'
+            }
+          >
+            <span className="topbar-bell-wrap">
+              <span className="topbar-bell-emoji" aria-hidden="true">
+                🔔
+              </span>
+              {notificationsCount > 0 && (
+                <span className="topbar-notifications-badge">{notificationsCount > 99 ? '99+' : notificationsCount}</span>
+              )}
+            </span>
+          </button>
+        )}
         <div className="topbar-org">
           {organizations.length > 1 ? (
             <>

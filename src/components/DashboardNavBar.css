@@ -215,27 +215,6 @@
   text-align: center;
 }
 
-.menu-label-with-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-}
-
-.menu-badge {
-  min-width: 18px;
-  height: 18px;
-  padding: 0 0.4rem;
-  border-radius: 999px;
-  background: #ef4444;
-  color: #ffffff;
-  font-size: 0.7rem;
-  font-weight: 600;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
-
 .logout-btn-sidebar:hover {
   background: #e5e7eb;
   color: #1f2937;

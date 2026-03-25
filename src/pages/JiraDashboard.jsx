@@ -308,15 +308,16 @@ function JiraDashboard({ session, onLogout }) {
           userRole={userRole}
           selectedProject={selectedProject}
           projectRole={selectedProject?.current_user_project_role ?? null}
-          notificationsCount={notifications.length}
           onBackToProjects={handleBackToProjects}
           orgMemberRole={currentUser?.org_member_role ?? null}
         />
         <main className="dashboard-main">
           <TopBar
             currentUser={currentUser}
-            selectedProject={selectedProject}
             onLogout={onLogout}
+            notificationsCount={notifications.length}
+            onOpenNotifications={() => handleNavViewChange(DASHBOARD_VIEWS.NOTIFICATIONS)}
+            notificationsActive={mainView === DASHBOARD_VIEWS.NOTIFICATIONS}
           />
           <div className="dashboard-main-content" style={{ padding: '2rem', maxWidth: '32rem' }}>
             <h2>No organization</h2>
@@ -339,7 +340,6 @@ function JiraDashboard({ session, onLogout }) {
         userRole={userRole}
         selectedProject={selectedProject}
         projectRole={selectedProject?.current_user_project_role ?? null}
-        notificationsCount={notifications.length}
         onBackToProjects={handleBackToProjects}
         orgMemberRole={currentUser?.org_member_role ?? null}
       />
@@ -347,8 +347,10 @@ function JiraDashboard({ session, onLogout }) {
       <main className="dashboard-main">
         <TopBar
           currentUser={currentUser}
-          selectedProject={selectedProject}
           onLogout={onLogout}
+          notificationsCount={notifications.length}
+          onOpenNotifications={() => handleNavViewChange(DASHBOARD_VIEWS.NOTIFICATIONS)}
+          notificationsActive={mainView === DASHBOARD_VIEWS.NOTIFICATIONS}
         />
         {mainView === DASHBOARD_VIEWS.USER_MANAGEMENT ? (
           <UserManagement session={session} />
