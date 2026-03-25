@@ -15,8 +15,46 @@ const DEFAULT_EMPTY = {
   project: {},
 };
 
+const DEFAULT_FEATURES = {
+  enableInviteUser: true,
+  enableAddUser: false,
+  enableUserProjectAssociation: false,
+};
+
+const parseFrontendFlag = (rawValue) => {
+  if (rawValue == null || rawValue === '') return undefined;
+  const normalized = String(rawValue).trim().toLowerCase();
+  if (normalized === 'true' || normalized === '1' || normalized === 'yes' || normalized === 'on') return true;
+  if (normalized === 'false' || normalized === '0' || normalized === 'no' || normalized === 'off') return false;
+  return undefined;
+};
+
+const FRONTEND_FEATURE_FLAGS = {
+  enableInviteUser: parseFrontendFlag(import.meta.env.VITE_ENABLE_INVITE_USER),
+  enableAddUser: parseFrontendFlag(import.meta.env.VITE_ENABLE_ADD_USER),
+  enableUserProjectAssociation: parseFrontendFlag(import.meta.env.VITE_ENABLE_USER_PROJECT_ASSOCIATION),
+};
+
+const getFrontendFeatures = () => {
+  return {
+    enableInviteUser:
+      FRONTEND_FEATURE_FLAGS.enableInviteUser === undefined
+        ? DEFAULT_FEATURES.enableInviteUser
+        : FRONTEND_FEATURE_FLAGS.enableInviteUser,
+    enableAddUser:
+      FRONTEND_FEATURE_FLAGS.enableAddUser === undefined
+        ? DEFAULT_FEATURES.enableAddUser
+        : FRONTEND_FEATURE_FLAGS.enableAddUser,
+    enableUserProjectAssociation:
+      FRONTEND_FEATURE_FLAGS.enableUserProjectAssociation === undefined
+        ? DEFAULT_FEATURES.enableUserProjectAssociation
+        : FRONTEND_FEATURE_FLAGS.enableUserProjectAssociation,
+  };
+};
+
 export function AccessConfigProvider({ children, session }) {
   const [roles, setRoles] = useState(null);
+  const [features, setFeatures] = useState(DEFAULT_FEATURES);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -31,9 +69,11 @@ export function AccessConfigProvider({ children, session }) {
       setError(null);
       const { data } = await api.get('/api/access-config');
       setRoles(data?.roles ?? null);
+      setFeatures(getFrontendFeatures());
     } catch (e) {
       setError(e?.response?.data?.error || e?.message || 'Failed to load access config');
       setRoles(null);
+      setFeatures(getFrontendFeatures());
     } finally {
       setLoading(false);
     }
@@ -54,6 +94,7 @@ export function AccessConfigProvider({ children, session }) {
   const value = useMemo(
     () => ({
       roles,
+      features,
       loading,
       error,
       refetch: fetchConfig,
@@ -66,6 +107,9 @@ export function AccessConfigProvider({ children, session }) {
       canManageProjectMembers: (r) => getRole(r).project?.canManageMembers === true,
       canViewAllProjects: (r) => getRole(r).global?.canViewAllProjects === true,
       canViewAllUsers: (r) => getRole(r).global?.canViewAllUsers === true,
+      canInviteUser: () => features.enableInviteUser === true,
+      canAddUser: () => features.enableAddUser === true,
+      canConfigureUserProjectAssociation: () => features.enableUserProjectAssociation === true,
       /**
        * Milestones sidebar: hidden for global/project "client" unless canManageMilestones is on.
        * Other roles see the menu (read-only in MilestonesView when manage is off).
@@ -83,7 +127,7 @@ export function AccessConfigProvider({ children, session }) {
         return data;
       },
     }),
-    [roles, loading, error, fetchConfig, getRole]
+    [roles, features, loading, error, fetchConfig, getRole]
   );
 
   return (

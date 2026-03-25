@@ -2,17 +2,10 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useAccessConfig } from '../context/AccessConfigContext.jsx';
 import './RolesManagement.css';
 
-const ROLE_KEYS = [
-  'superadmin',
-  'admin',
-  'team_leader',
-  'team_member',
-  'client',
-  'user',
-];
+const GLOBAL_ROLE_KEYS = ['admin', 'user'];
+const PROJECT_ROLE_KEYS = ['admin', 'team_leader', 'team_member', 'client'];
 
 const ROLE_LABELS = {
-  superadmin: 'Super admin',
   admin: 'Admin',
   team_leader: 'Team leader',
   team_member: 'Team member',
@@ -37,7 +30,16 @@ const PROJECT_PERMISSIONS = [
 
 function cloneRoles(src) {
   const out = {};
-  for (const rk of ROLE_KEYS) {
+  const roleKeys = Object.keys(src || {});
+  for (const rk of roleKeys) {
+    const row = src?.[rk];
+    out[rk] = {
+      global: { ...(row?.global || {}) },
+      project: { ...(row?.project || {}) },
+    };
+  }
+  for (const rk of [...new Set([...GLOBAL_ROLE_KEYS, ...PROJECT_ROLE_KEYS])]) {
+    if (out[rk]) continue;
     const row = src?.[rk];
     out[rk] = {
       global: { ...(row?.global || {}) },
@@ -52,6 +54,7 @@ function RolesManagement({ userRole }) {
   const [draft, setDraft] = useState(null);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState(null);
+  const [activeTab, setActiveTab] = useState('organization');
 
   const allowed = useMemo(() => canManageUsers(userRole), [canManageUsers, userRole]);
 
@@ -126,8 +129,8 @@ function RolesManagement({ userRole }) {
         <div>
           <h1>Access Control</h1>
           <p className="roles-management-subtitle">
-            Configure what each <strong>global role</strong> can do across the organization and
-            inside projects. Stored in the database; backend enforces the same rules after save.
+            Configure access for workspace roles (<strong>Admin</strong> and <strong>User</strong>)
+            across organization and project actions.
           </p>
         </div>
         <div className="roles-management-actions">
@@ -146,15 +149,34 @@ function RolesManagement({ userRole }) {
         </div>
       )}
 
+      <div className="roles-management-tabs" role="tablist" aria-label="Access control sections">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeTab === 'organization'}
+          className={`roles-tab ${activeTab === 'organization' ? 'is-active' : ''}`}
+          onClick={() => setActiveTab('organization')}
+        >
+          Organization Access
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeTab === 'project'}
+          className={`roles-tab ${activeTab === 'project' ? 'is-active' : ''}`}
+          onClick={() => setActiveTab('project')}
+        >
+          Project Access
+        </button>
+      </div>
+
       <div className="roles-management-grid">
-        {ROLE_KEYS.map((roleKey) => (
-          <section key={roleKey} className="roles-card">
+        {activeTab === 'organization' && GLOBAL_ROLE_KEYS.map((roleKey) => (
+          <section key={`global-${roleKey}`} className="roles-card">
             <h2 className="roles-card-title">{ROLE_LABELS[roleKey] || roleKey}</h2>
             <p className="roles-card-key">
               <code>{roleKey}</code>
             </p>
-
-            <h3 className="roles-section-title">Organization (global)</h3>
             <ul className="roles-perm-list">
               {GLOBAL_PERMISSIONS.map(({ key, label }) => (
                 <li key={key}>
@@ -169,8 +191,14 @@ function RolesManagement({ userRole }) {
                 </li>
               ))}
             </ul>
-
-            <h3 className="roles-section-title">Inside projects</h3>
+          </section>
+        ))}
+        {activeTab === 'project' && PROJECT_ROLE_KEYS.map((roleKey) => (
+          <section key={`project-${roleKey}`} className="roles-card">
+            <h2 className="roles-card-title">{ROLE_LABELS[roleKey] || roleKey}</h2>
+            <p className="roles-card-key">
+              <code>{roleKey}</code>
+            </p>
             <ul className="roles-perm-list">
               {PROJECT_PERMISSIONS.map(({ key, label }) => (
                 <li key={key}>

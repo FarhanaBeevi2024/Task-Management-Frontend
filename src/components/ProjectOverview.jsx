@@ -6,7 +6,7 @@ import './ProjectOverview.css';
 const PROJECT_ROLES = ['admin', 'team_leader', 'team_member', 'client'];
 
 function ProjectOverview({ project, session, userRole }) {
-  const { canManageProjectMembers } = useAccessConfig();
+  const { canManageProjectMembers, canConfigureUserProjectAssociation } = useAccessConfig();
   const [localProject, setLocalProject] = useState(project);
   const [editing, setEditing] = useState(false);
   const [savingProject, setSavingProject] = useState(false);
@@ -19,6 +19,7 @@ function ProjectOverview({ project, session, userRole }) {
   const [selectedProjectRole, setSelectedProjectRole] = useState('team_member');
 
   const canManageMembers = canManageProjectMembers(userRole);
+  const useUserProjectAssociation = canConfigureUserProjectAssociation();
 
   useEffect(() => {
     setLocalProject(project);
@@ -54,7 +55,10 @@ function ProjectOverview({ project, session, userRole }) {
       // Include invited users that exist as auth profiles but aren't linked to org_members yet.
       // This enables adding invited users to a project.
       const response = await api.get('/api/users', {
-        params: { include_pending_signups: '1' },
+        params: {
+          include_pending_signups: '1',
+          ...(useUserProjectAssociation && project?.id ? { project_id: project.id } : {}),
+        },
       });
       setUsers(Array.isArray(response.data) ? response.data : []);
     } catch (err) {
