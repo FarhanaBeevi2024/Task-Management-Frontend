@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../services/api';
 import { useAccessConfig } from '../context/AccessConfigContext.jsx';
+import { useConfirm } from '../context/ConfirmContext.jsx';
 import './MilestonesView.css';
 
 const STATUS_OPTIONS = [
@@ -10,6 +11,7 @@ const STATUS_OPTIONS = [
 ];
 
 function MilestonesView({ project, session, userRole }) {
+  const confirm = useConfirm();
   const { canManageMilestones } = useAccessConfig();
   const [milestones, setMilestones] = useState([]);
   const [issues, setIssues] = useState([]);
@@ -114,7 +116,14 @@ function MilestonesView({ project, session, userRole }) {
   };
 
   const handleDelete = async (milestone) => {
-    if (!window.confirm(`Delete milestone "${milestone.version}"? Issues will be unassigned from this milestone.`)) return;
+    const ok = await confirm({
+      title: 'Delete milestone',
+      message: `Delete milestone "${milestone.version}"?\n\nIssues will be unassigned from this milestone.`,
+      confirmLabel: 'Delete',
+      cancelLabel: 'Cancel',
+      danger: true,
+    });
+    if (!ok) return;
     try {
       await api.delete(`/api/jira/milestones/${milestone.id}`);
       fetchData();

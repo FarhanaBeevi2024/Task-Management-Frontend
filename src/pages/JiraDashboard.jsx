@@ -15,6 +15,8 @@ import RolesManagement from '../components/RolesManagement.jsx';
 import TopBar from '../components/TopBar.jsx';
 import { useAccessConfig } from '../context/AccessConfigContext.jsx';
 import { useOrganization } from '../context/OrganizationContext.jsx';
+import { useConfirm } from '../context/ConfirmContext.jsx';
+import { notifyError } from '../utils/toastNotify.js';
 import './JiraDashboard.css';
 
 /**
@@ -22,6 +24,7 @@ import './JiraDashboard.css';
  * Composes DashboardNavBar, ProjectsView, RecentIssuesView, TaskBoardView, and modals.
  */
 function JiraDashboard({ session, onLogout }) {
+  const confirm = useConfirm();
   const {
     ready: orgReady,
     organizations,
@@ -169,13 +172,19 @@ function JiraDashboard({ session, onLogout }) {
       fetchProjects();
     } catch (error) {
       console.error('Error creating project:', error);
-      alert(error.response?.data?.error ?? 'Failed to create project');
+      notifyError(error.response?.data?.error ?? 'Failed to create project');
     }
   };
 
   const handleDeleteProject = async (project) => {
     if (!project?.id) return;
-    const ok = window.confirm(`Delete project "${project.name}"?\n\nThis will permanently delete the project and its related data.`);
+    const ok = await confirm({
+      title: 'Delete project',
+      message: `Delete "${project.name}"?\n\nThis will permanently delete the project and its related data.`,
+      confirmLabel: 'Delete project',
+      cancelLabel: 'Cancel',
+      danger: true,
+    });
     if (!ok) return;
     try {
       await api.delete(`/api/jira/projects/${project.id}`);
@@ -187,7 +196,7 @@ function JiraDashboard({ session, onLogout }) {
       fetchProjects();
     } catch (error) {
       console.error('Error deleting project:', error);
-      alert(error.response?.data?.error ?? 'Failed to delete project');
+      notifyError(error.response?.data?.error ?? 'Failed to delete project');
     }
   };
 
@@ -203,7 +212,7 @@ function JiraDashboard({ session, onLogout }) {
       setRefreshKey((k) => k + 1);
     } catch (error) {
       console.error('Error creating issue:', error);
-      alert(error.response?.data?.error ?? 'Failed to create');
+      notifyError(error.response?.data?.error ?? 'Failed to create');
     }
   };
 

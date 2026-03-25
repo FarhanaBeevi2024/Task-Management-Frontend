@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { ToastContainer } from 'react-toastify';
 import {
   supabase,
   getInitialSupabaseAuthHashType,
@@ -8,7 +9,9 @@ import Login from '../components/Login.jsx';
 import InviteSignup from '../components/InviteSignup.jsx';
 import ResetPassword from '../components/ResetPassword.jsx';
 import AuthenticatedHome from './AuthenticatedHome.jsx';
+import { ConfirmProvider } from '../context/ConfirmContext.jsx';
 import { setApiAccessToken, setActiveOrganizationId } from '../services/api';
+import 'react-toastify/dist/ReactToastify.css';
 
 function readInviteTokenFromUrl() {
   try {
@@ -164,7 +167,20 @@ function App() {
 
   return (
     <div className="App">
-      {showInviteFlow ? (
+      <ConfirmProvider>
+        <ToastContainer
+          position="top-right"
+          autoClose={4500}
+          hideProgressBar={false}
+          newestOnTop
+          closeOnClick
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+          theme="light"
+          limit={5}
+        />
+        {showInviteFlow ? (
         <InviteSignup
           token={inviteToken}
           session={session}
@@ -187,6 +203,7 @@ function App() {
       ) : (
         <Login onLogin={handleLogin} />
       )}
+      </ConfirmProvider>
     </div>
   );
 }

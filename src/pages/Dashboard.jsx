@@ -2,9 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { api } from '../services/api';
 import TaskList from '../components/TaskList.jsx';
 import TaskForm from '../components/TaskForm.jsx';
+import { useConfirm } from '../context/ConfirmContext.jsx';
+import { notifyError } from '../utils/toastNotify.js';
 import './Dashboard.css';
 
 const Dashboard = ({ session, onLogout }) => {
+  const confirm = useConfirm();
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -71,7 +74,7 @@ const Dashboard = ({ session, onLogout }) => {
       fetchTasks();
     } catch (error) {
       console.error('Error creating task:', error);
-      alert(error.response?.data?.error || 'Failed to create task');
+      notifyError(error.response?.data?.error || 'Failed to create task');
     }
   };
 
@@ -81,21 +84,26 @@ const Dashboard = ({ session, onLogout }) => {
       fetchTasks();
     } catch (error) {
       console.error('Error updating task:', error);
-      alert(error.response?.data?.error || 'Failed to update task');
+      notifyError(error.response?.data?.error || 'Failed to update task');
     }
   };
 
   const handleDeleteTask = async (taskId) => {
-    if (!window.confirm('Are you sure you want to delete this task?')) {
-      return;
-    }
+    const ok = await confirm({
+      title: 'Delete task',
+      message: 'Are you sure you want to delete this task?',
+      confirmLabel: 'Delete',
+      cancelLabel: 'Cancel',
+      danger: true,
+    });
+    if (!ok) return;
 
     try {
       await api.delete(`/api/tasks/${taskId}`);
       fetchTasks();
     } catch (error) {
       console.error('Error deleting task:', error);
-      alert(error.response?.data?.error || 'Failed to delete task');
+      notifyError(error.response?.data?.error || 'Failed to delete task');
     }
   };
 

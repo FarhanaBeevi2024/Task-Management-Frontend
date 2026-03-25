@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../services/api';
 import { useAccessConfig } from '../context/AccessConfigContext.jsx';
+import { useConfirm } from '../context/ConfirmContext.jsx';
 import './ProjectOverview.css';
 
 const PROJECT_ROLES = ['admin', 'team_leader', 'team_member', 'client'];
 
 function ProjectOverview({ project, session, userRole }) {
+  const confirm = useConfirm();
   const { canManageProjectMembers, canConfigureUserProjectAssociation } = useAccessConfig();
   const [localProject, setLocalProject] = useState(project);
   const [editing, setEditing] = useState(false);
@@ -115,7 +117,14 @@ function ProjectOverview({ project, session, userRole }) {
 
   const handleRemoveMember = async (memberUserId) => {
     if (!project) return;
-    if (!window.confirm('Remove this user from the project?')) return;
+    const ok = await confirm({
+      title: 'Remove member',
+      message: 'Remove this user from the project?',
+      confirmLabel: 'Remove',
+      cancelLabel: 'Cancel',
+      danger: true,
+    });
+    if (!ok) return;
     try {
       setError('');
       await api.delete(`/api/jira/projects/${project.id}/members/${memberUserId}`);

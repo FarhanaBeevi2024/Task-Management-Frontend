@@ -51,3 +51,49 @@ code {
   outline: 2px solid #667eea;
   outline-offset: 2px;
 }
+
+/* React Toastify — match app chrome */
+.Toastify__toast-container {
+  z-index: 10050;
+}
+
+.Toastify__toast {
+  border-radius: 12px;
+  font-family: inherit;
+  font-size: 0.9375rem;
+  box-shadow: 0 16px 48px rgba(15, 23, 42, 0.12);
+  border: 1px solid rgba(229, 231, 235, 0.95);
+}
+
+.Toastify__toast--error {
+  border-left: 4px solid #ef4444;
+}
+
+.Toastify__toast--success {
+  border-left: 4px solid #22c55e;
+}
+
+.Toastify__toast--warning {
+  border-left: 4px solid #eab308;
+}
+
+.Toastify__toast--info {
+  border-left: 4px solid #667eea;
+}
+
+.Toastify__progress-bar--error {
+  background: linear-gradient(90deg, #f87171, #ef4444);
+}
+
+.Toastify__progress-bar--success {
+  background: linear-gradient(90deg, #4ade80, #22c55e);
+}
+
+.Toastify__close-button {
+  opacity: 0.55;
+}
+
+.Toastify__close-button:hover,
+.Toastify__close-button:focus {
+  opacity: 1;
+}

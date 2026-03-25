@@ -7,6 +7,7 @@ import {
   normalizeWorkflowStatus,
   isWorkflowStatusEditableForBoard,
 } from '../constants/workflowStatus.js';
+import { notifyError } from '../utils/toastNotify.js';
 import './IssueDetail.css';
 
 const statusOptions = [
@@ -152,7 +153,7 @@ const IssueDetail = ({ issue, session, onClose, onEdit, onUpdate, onAddSubtask, 
       fetchActivityLogs();
     } catch (error) {
       console.error('Error updating issue:', error);
-      alert(error.response?.data?.error || 'Failed to update issue');
+      notifyError(error.response?.data?.error || 'Failed to update issue');
     } finally {
       setSaving(false);
     }
@@ -220,7 +221,7 @@ const IssueDetail = ({ issue, session, onClose, onEdit, onUpdate, onAddSubtask, 
       fetchActivityLogs();
     } catch (error) {
       console.error('Error adding comment:', error);
-      alert('Failed to add comment');
+      notifyError('Failed to add comment');
     }
   };
 
