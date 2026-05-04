@@ -17,7 +17,9 @@ export function getActiveOrganizationId() {
   return activeOrganizationId;
 }
 
-export const api = axios.create();
+export const api = axios.create({
+  baseURL: import.meta.env.VITE_API_BASE_URL
+});
 
 api.interceptors.request.use(async (config) => {
   const headers = { ...(config.headers || {}) };

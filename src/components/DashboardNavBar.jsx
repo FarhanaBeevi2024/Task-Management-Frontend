@@ -59,12 +59,18 @@ function DashboardNavBar({
           type="button"
           className="sidebar-brand-btn"
           onClick={onBackToProjects}
-          title="Task Management"
+          title="Task Flow"
         >
-          <span className="sidebar-brand-icon" aria-hidden="true">
-            ✓
-          </span>
-          <span className="sidebar-brand-text">Task Management</span>
+          <img
+            src="/task-flow-logo.png"
+            alt=""
+            width={38}
+            height={38}
+            className="sidebar-brand-logo"
+            decoding="async"
+            aria-hidden="true"
+          />
+          <span className="sidebar-brand-text">Task Flow</span>
         </button>
       </div>
 

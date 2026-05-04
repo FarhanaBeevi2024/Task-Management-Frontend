@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import {
   supabase,
@@ -6,6 +7,7 @@ import {
   getInitialSupabaseAuthQueryType,
 } from '../services/supabase';
 import Login from '../components/Login.jsx';
+import LandingPage from './LandingPage.jsx';
 import InviteSignup from '../components/InviteSignup.jsx';
 import ResetPassword from '../components/ResetPassword.jsx';
 import AuthenticatedHome from './AuthenticatedHome.jsx';
@@ -52,6 +54,7 @@ function shouldOpenRecoveryAfterPasswordRecoveryEvent() {
 }
 
 function App() {
+  const navigate = useNavigate();
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
   const [inviteToken, setInviteToken] = useState(() => readInviteTokenFromUrl());
@@ -120,6 +123,7 @@ function App() {
     setSession(null);
     setApiAccessToken(null);
     setActiveOrganizationId(null);
+    navigate('/', { replace: true });
   };
 
   const clearInviteFromUrl = () => {
@@ -201,7 +205,11 @@ function App() {
       ) : session ? (
         <AuthenticatedHome session={session} onLogout={handleLogout} />
       ) : (
-        <Login onLogin={handleLogin} />
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/sign-in" element={<Login onLogin={handleLogin} />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
       )}
       </ConfirmProvider>
     </div>

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { supabase } from '../services/supabase';
 import { api } from '../services/api';
 import './Login.css';
@@ -56,6 +57,20 @@ const Login = ({ onLogin }) => {
   return (
     <div className="login-container">
       <div className="login-card">
+        <p className="login-back">
+          <Link to="/">← Back to home</Link>
+        </p>
+        <div className="login-brand">
+          <img
+            src="/task-flow-logo.png"
+            alt=""
+            width={56}
+            height={56}
+            className="login-brand-logo"
+            decoding="async"
+          />
+          <span className="login-brand-name">Task Flow</span>
+        </div>
         <h2>Sign In</h2>
         <p className="login-hint">
           New here? Use the invitation link from your email to create your account.
