@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../services/supabase';
 import { api } from '../services/api';
+import { notifyError, notifySuccess, notifyInfo } from '../utils/toastNotify.js';
 import './Login.css';
 
 /**
@@ -13,13 +14,11 @@ const Login = ({ onLogin }) => {
   const [loading, setLoading] = useState(false);
   const [recoveryLoading, setRecoveryLoading] = useState(false);
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError('');
-    setSuccess('');
 
     try {
       const { data, error: signErr } = await supabase.auth.signInWithPassword({
@@ -40,15 +39,33 @@ const Login = ({ onLogin }) => {
   };
 
   const handleResetPassword = async () => {
+    const trimmed = String(email || '').trim().toLowerCase();
+    if (!trimmed || !trimmed.includes('@')) {
+      notifyError('Enter the email address you use for Task Flow before resetting your password.');
+      return;
+    }
+
     setRecoveryLoading(true);
     setError('');
-    setSuccess('');
     try {
-      const res = await api.post('/api/public/auth/recovery-action', { email });
-      setSuccess(res.data?.message || 'If your email exists, we will send password reset instructions.');
+      const res = await api.post('/api/public/auth/recovery-action', { email: trimmed });
+      const delivery = res.data?.delivery;
+
+      if (delivery === 'log_only') {
+        notifyInfo(
+          'Development mode: no email was sent. Open your API server logs and copy the recovery link from there.',
+          { autoClose: 8000 },
+        );
+      } else {
+        notifySuccess(
+          'If that email is registered, we’ve sent password reset instructions. Check your inbox and spam folder, then open the link to choose a new password.',
+          { autoClose: 6500 },
+        );
+      }
     } catch (err) {
-      setError(err?.response?.data?.error || err.message || 'Reset password failed');
-      setSuccess('');
+      const msg = err?.response?.data?.error || err.message || 'Could not start password reset';
+      setError(msg);
+      notifyError(msg);
     } finally {
       setRecoveryLoading(false);
     }
@@ -98,11 +115,6 @@ const Login = ({ onLogin }) => {
             />
           </div>
           {error && <div className="error-message">{error}</div>}
-          {success && (
-            <div className="error-message" style={{ borderColor: '#bbf7d0', background: '#dcfce7', color: '#166534' }}>
-              {success}
-            </div>
-          )}
           <button type="submit" disabled={loading} className="submit-btn">
             {loading ? 'Loading...' : 'Sign In'}
           </button>

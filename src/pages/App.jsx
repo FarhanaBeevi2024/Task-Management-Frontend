@@ -200,6 +200,7 @@ function App() {
             setSession(null);
             setApiAccessToken(null);
             setActiveOrganizationId(null);
+            navigate('/sign-in', { replace: true });
           }}
         />
       ) : session ? (
@@ -208,6 +209,10 @@ function App() {
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/sign-in" element={<Login onLogin={handleLogin} />} />
+          <Route
+            path="/reset-password"
+            element={<Navigate to="/sign-in" replace />}
+          />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       )}

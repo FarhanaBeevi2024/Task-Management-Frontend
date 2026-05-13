@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { supabase } from '../services/supabase';
+import { notifySuccess } from '../utils/toastNotify.js';
 import './Login.css';
 
 function ResetPassword({ onDone }) {
@@ -34,6 +35,9 @@ function ResetPassword({ onDone }) {
       });
       if (updateError) throw updateError;
       setSuccess('Password reset successful. You can now sign in.');
+      notifySuccess('Your password has been updated. You can sign in with your new password.', {
+        autoClose: 4500,
+      });
     } catch (e2) {
       setError(e2?.message || 'Failed to reset password');
     } finally {
